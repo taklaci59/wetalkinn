@@ -1,0 +1,272 @@
+/* --- 1. GELEN ARAMA BİLDİRİMİ (OVERLAY) --- */
+.call-screen {
+    position: fixed;
+    top: -250px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 340px;
+    background: var(--bg-secondary);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    z-index: 10002;
+    transition: all 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    box-shadow: 0 20px 40px var(--shadow-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.call-screen.active {
+    top: 20px;
+}
+
+.caller-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.caller-avatar {
+    width: 60px;
+    height: 60px;
+    background: var(--accent);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--accent-text);
+}
+
+.call-status {
+    color: var(--success);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* --- 2. SOL ALT AKTİF SES PANELİ (SIDEBAR) --- */
+.voice-panel-sidebar {
+    display: none;
+    background: var(--bg-tertiary);
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    position: absolute;
+    bottom: 52px;
+    left: 0;
+    width: 100%;
+    z-index: 99;
+    flex-direction: column;
+}
+
+.voice-panel-sidebar.active {
+    display: flex;
+}
+
+.voice-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.voice-status-green {
+    color: var(--success);
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#callTimer {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.voice-user-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebar-target-name {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+/* --- 3. DM TEPESİNDEKİ KOMPAKT PANEL --- */
+.voice-container-dm {
+    display: none;
+    background: var(--bg-secondary);
+    width: 100%;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border-color);
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    animation: fadeInDown 0.4s ease;
+}
+
+.voice-container-dm.active {
+    display: flex;
+}
+
+.participant {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.avatar-wrapper {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    position: relative;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.participant.speaking .avatar-wrapper {
+    border-color: var(--success);
+    box-shadow: 0 0 12px var(--success);
+}
+
+.status-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    background: var(--danger);
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    border: 2px solid var(--bg-secondary);
+    color: var(--accent-text);
+}
+
+.participant.muted .status-badge.mic,
+.participant.deaf .status-badge.deaf {
+    display: flex;
+}
+
+/* --- DM PANELİ KONTROL BUTONLARI --- */
+.dm-call-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px;
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+}
+
+.btn-dm-ctrl {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.btn-dm-ctrl:hover {
+    background: var(--hover-bg);
+    color: var(--text-primary);
+}
+
+.btn-dm-ctrl.active,
+.btn-dm-ctrl.hangup {
+    background: var(--danger);
+    color: var(--accent-text);
+}
+
+.btn-dm-ctrl.hangup:hover {
+    opacity: 0.9;
+    transform: scale(1.05);
+}
+
+/* --- ORTAK BUTON STİLLERİ --- */
+.voice-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-v {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.btn-v:hover {
+    background: var(--hover-bg);
+    color: var(--text-primary);
+}
+
+.btn-v.active,
+.btn-v.red-hangup {
+    color: var(--danger);
+}
+
+.btn-v.red-hangup:hover {
+    background: var(--hover-bg);
+}
+
+.btn-action {
+    width: 50px;
+    height: 50px;
+    border-radius: 15px;
+    border: none;
+    color: var(--accent-text);
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.btn-answer {
+    background: var(--success);
+}
+
+.btn-decline {
+    background: var(--danger);
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

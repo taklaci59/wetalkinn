@@ -1,0 +1,639 @@
+/* --- GLOBAL THEME SYSTEM: CORE VARIABLES (2025 PRO) --- */
+
+:root {
+    /* 1. Surfaced & Elevation Layers */
+    --surface-1: #12131B; /* Base Background */
+    --surface-2: #0B0C14; /* Sidebars / Insets */
+    --surface-3: #07080E; /* Low Priority Surfaces */
+    --surface-4: #1B1D27; /* Elevated (Cards, Modals) */
+    --surface-ghost: rgba(255, 255, 255, 0.05);
+
+    /* 2. Typography Hierarchy */
+    --text-1: #F2F3F7;    /* Primary Text */
+    --text-2: #A8ACB8;    /* Secondary / Subtitles */
+    --text-3: #6E7280;    /* Muted / Placeholder */
+    --text-on-accent: #ffffff;
+
+    /* 3. Status & States */
+    --status-success: #23a55a;
+    --status-danger: #f23f42;
+    --status-warning: #f0b232;
+    
+    /* 4. Brand & Interaction */
+    --accent: #7C5CFF;
+    --accent-hover: #8B5CF6;
+    --accent-active: #6D4AFF;
+    --accent-soft: rgba(124, 92, 255, 0.15);
+    
+    /* 5. Borders & Dividers */
+    --border-subtle: color-mix(in srgb, var(--text-1) 8%, transparent);
+    --border-strong: color-mix(in srgb, var(--text-1) 20%, transparent);
+    --border-focus: var(--accent);
+    
+    /* 6. Spacing Scale (4px) */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+
+    /* 7. Elevation Tokens (Shadows) */
+    --shadow-low: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-med: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-high: 0 12px 32px rgba(0, 0, 0, 0.6);
+    --glow-color: rgba(110, 91, 255, 0.4);
+
+    /* 8. Modern UI Tokens */
+    --glass-blur: 15px;
+    --focus-ring: 0 0 0 3px rgba(124, 92, 255, 0.5);
+    --button-disabled: #4f545c;
+    --input-bg: var(--surface-3);
+
+    /* --- BACKWARD COMPATIBILITY BRIDGE --- */
+    --bg-primary: var(--surface-1);
+    --bg-secondary: var(--surface-2);
+    --bg-tertiary: var(--surface-3);
+    --sidebar-bg: var(--surface-2);
+    --panel-bg: var(--surface-ghost);
+    --card-bg: var(--surface-4);
+    
+    --text-primary: var(--text-1);
+    --text-secondary: var(--text-2);
+    --text-muted: var(--text-3);
+    
+    --border-color: var(--border-subtle);
+    --hover-bg: color-mix(in srgb, var(--text-1) 8%, transparent);
+    --active-bg: color-mix(in srgb, var(--accent) 30%, transparent);
+    --card-selected-bg: color-mix(in srgb, var(--text-1) 12%, transparent);
+    --shadow-color: rgba(0, 0, 0, 0.4);
+}
+
+/* --- THEME PRESETS: 30+ PREMIUM CATEGORIES (2025 PRO) --- */
+
+/* ğŸŒ‘ DARK / MINIMAL / CLEAN */
+html.theme-void {
+    --surface-1: #000000;
+    --surface-2: #050505;
+    --surface-3: #0a0a0a;
+    --surface-4: #111111;
+    --text-1: #ffffff;
+    --text-2: #a0a0a0;
+    --text-3: #555555;
+    --accent: #ffffff;
+    --accent-hover: #eeeeee;
+    --text-on-accent: #000000;
+}
+
+html.theme-slate {
+    --surface-1: #0f172a;
+    --surface-2: #020617;
+    --surface-3: #1e293b;
+    --surface-4: #334155;
+    --text-1: #f8fafc;
+    --text-2: #94a3b8;
+    --accent: #38bdf8;
+    --text-on-accent: #0f172a;
+}
+
+html.theme-graphite {
+    --surface-1: #1a1a1a;
+    --surface-2: #121212;
+    --surface-3: #222222;
+    --surface-4: #2d2d2d;
+    --text-1: #e0e0e0;
+    --text-2: #a0a0a0;
+    --accent: #ffffff;
+    --text-on-accent: #000000;
+}
+
+/* ğŸŒ¸ SOFT / AESTHETIC / PASTEL */
+html.theme-sakura {
+    --surface-1: #fff0f5;
+    --surface-2: #ffb7c5;
+    --surface-3: #ffe4e1;
+    --surface-4: #ffffff;
+    --text-1: #4a4a4a;
+    --text-2: #e91e63;
+    --text-3: #ff69b4;
+    --accent: #ff69b4;
+    --accent-hover: #ff1493;
+    --text-on-accent: #ffffff;
+}
+
+html.theme-frost {
+    --surface-1: #f0f8ff;
+    --surface-2: #b3d1ff;
+    --surface-3: #e6f0ff;
+    --surface-4: #ffffff;
+    --text-1: #1e3a8a;
+    --text-2: #3b82f6;
+    --accent: #3b82f6;
+    --text-on-accent: #ffffff;
+}
+
+html.theme-lavender {
+    --surface-1: #f5f3ff;
+    --surface-2: #ddd6fe;
+    --surface-3: #ede9fe;
+    --surface-4: #ffffff;
+    --text-1: #4c1d95;
+    --text-2: #7c3aed;
+    --accent: #8b5cf6;
+    --text-on-accent: #ffffff;
+}
+
+html.theme-cotton-candy {
+    --surface-1: #fdf2f8;
+    --surface-2: #fbcfe8;
+    --surface-3: #fce7f3;
+    --surface-4: #ffffff;
+    --text-1: #9d174d;
+    --text-2: #db2777;
+    --accent: #f472b6;
+    --text-on-accent: #ffffff;
+}
+
+/* ğŸ§¬ TECH / FUTURISTIC / VIBRANT */
+html.theme-cyberpunk {
+    --surface-1: #0a0a0f;
+    --surface-2: #050505;
+    --surface-3: #11111a;
+    --surface-4: #1a1a2e;
+    --text-1: #00ffcc;
+    --text-2: #ff00ff;
+    --text-3: #f3ec11;
+    --accent: #00ffcc;
+    --accent-hover: #ff00ff;
+    --text-on-accent: #000000;
+}
+
+html.theme-neon-rider {
+    --surface-1: #2d0b3a;
+    --surface-2: #1a0524;
+    --surface-3: #3e0e52;
+    --surface-4: #5a1476;
+    --text-1: #00f3ff;
+    --text-2: #ff00ff;
+    --accent: #ff00ff;
+    --text-on-accent: #ffffff;
+    --glow-color: rgba(255, 0, 255, 0.6);
+}
+
+html.theme-matrix {
+    --surface-1: #000000;
+    --surface-2: #000d00;
+    --surface-3: #001a00;
+    --surface-4: #002600;
+    --text-1: #00ff41;
+    --text-2: #008f11;
+    --accent: #00ff41;
+    --text-on-accent: #000000;
+}
+
+html.theme-synthwave {
+    --surface-1: #1a0633;
+    --surface-2: #0e031a;
+    --surface-3: #2a0b4d;
+    --surface-4: #3d1472;
+    --text-1: #ff71ce;
+    --text-2: #01cdfe;
+    --accent: #05ffa1;
+    --text-on-accent: #000000;
+}
+
+/* ğŸ‘‘ LUXURY / PREMIUM / METALLIC */
+html.theme-black-gold {
+    --surface-1: #0d0d0d;
+    --surface-2: #050505;
+    --surface-3: #141414;
+    --surface-4: #1a1a1a;
+    --text-1: #d4af37;
+    --text-2: #b8860b;
+    --text-3: #5c4033;
+    --accent: #d4af37;
+    --accent-hover: #f1c40f;
+    --text-on-accent: #000000;
+}
+
+html.theme-royal-crimson {
+    --surface-1: #2d0a0a;
+    --surface-2: #1a0404;
+    --surface-3: #400d0d;
+    --surface-4: #591212;
+    --text-1: #ffd700;
+    --text-2: #c41e3a;
+    --accent: #ffd700;
+    --text-on-accent: #000000;
+}
+
+html.theme-midnight-emerald {
+    --surface-1: #061a14;
+    --surface-2: #030d0a;
+    --surface-3: #09261d;
+    --surface-4: #0d382b;
+    --text-1: #50c878;
+    --text-2: #00a86b;
+    --accent: #d4af37;
+    --text-on-accent: #000000;
+}
+
+/* ğŸ® GAMER / COUNTER-STRIKE INSPIRED */
+html.theme-fade {
+    --surface-1: #12131b;
+    --surface-2: #0b0c14;
+    --surface-3: #1b1d27;
+    --surface-4: #252836;
+    --text-1: #ffffff;
+    --accent: #ffab40;
+    --text-on-accent: #000000;
+    --glow-color: rgba(255, 171, 64, 0.3);
+}
+
+html.theme-printstream {
+    --surface-1: #1a1a1c;
+    --surface-2: #111112;
+    --surface-3: #252528;
+    --surface-4: #303035;
+    --text-1: #ffffff;
+    --text-2: #bbbbbb;
+    --accent: #ffffff;
+    --text-on-accent: #000000;
+}
+
+html.theme-hyperbeast {
+    --surface-1: #0f1c1c;
+    --surface-2: #091212;
+    --surface-3: #1a2e2e;
+    --surface-4: #264545;
+    --text-1: #ff00ff;
+    --text-2: #00ffcc;
+    --accent: #ff3366;
+    --text-on-accent: #ffffff;
+}
+
+html.theme-asiimov {
+    --surface-1: #ffffff;
+    --surface-2: #f2f3f7;
+    --surface-3: #e8eaef;
+    --surface-4: #d0d4da;
+    --text-1: #12131b;
+    --text-2: #ff6600;
+    --accent: #ff6600;
+    --text-on-accent: #ffffff;
+}
+
+/* â˜€ï¸ BRIGHT / HIGH CONTRAST */
+html.theme-banana {
+    --surface-1: #fff9c4;
+    --surface-2: #fbc02d;
+    --surface-3: #fff176;
+    --surface-4: #ffffff;
+    --text-1: #3e2723;
+    --text-2: #f57f17;
+    --text-3: #9c640c;
+    --accent: #3e2723;
+    --text-on-accent: #fff9c4;
+}
+
+html.theme-juice {
+    --surface-1: #fff4e6;
+    --surface-2: #ffa94d;
+    --surface-3: #ffd8a8;
+    --surface-4: #ffffff;
+    --text-1: #e8590c;
+    --text-2: #d9480f;
+    --accent: #e8590c;
+    --text-on-accent: #ffffff;
+}
+
+html.theme-solar {
+    --surface-1: #fffbeb;
+    --surface-2: #fbbf24;
+    --surface-3: #fef3c7;
+    --surface-4: #ffffff;
+    --text-1: #92400e;
+    --text-2: #d97706;
+    --accent: #d97706;
+    --text-on-accent: #ffffff;
+}
+
+/* ğŸ‚ NATURAL / EARTHY / DEPTH */
+html.theme-moss {
+    --surface-1: #1a1b16;
+    --surface-2: #12130f;
+    --surface-3: #2a2c22;
+    --surface-4: #36392c;
+    --text-1: #a3b18a;
+    --text-2: #588157;
+    --accent: #a3b18a;
+    --text-on-accent: #1a1b16;
+}
+
+html.theme-autumn {
+    --surface-1: #1b1311;
+    --surface-2: #140d0c;
+    --surface-3: #2c1d1a;
+    --surface-4: #3d2925;
+    --text-1: #ffb347;
+    --text-2: #ff4500;
+    --accent: #ffb347;
+    --text-on-accent: #1b1311;
+}
+
+html.theme-ocean {
+    --surface-1: #0a192f;
+    --surface-2: #020c1b;
+    --surface-3: #112240;
+    --surface-4: #233554;
+    --text-1: #64ffda;
+    --text-2: #8892b0;
+    --accent: #64ffda;
+    --text-on-accent: #0a192f;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* 🎨 AESTHETIC & PASTEL                                  */
+/* ═══════════════════════════════════════════════════════ */
+
+html.theme-catppuccin-mocha {
+    --surface-1: #1e1e2e;
+    --surface-2: #181825;
+    --surface-3: #11111b;
+    --surface-4: #313244;
+    --text-1: #cdd6f4;
+    --text-2: #a6adc8;
+    --text-3: #6c7086;
+    --accent: #cba6f7;
+    --accent-hover: #b4befe;
+    --text-on-accent: #1e1e2e;
+}
+
+html.theme-catppuccin-latte {
+    --surface-1: #eff1f5;
+    --surface-2: #e6e9ef;
+    --surface-3: #dce0e8;
+    --surface-4: #ccd0da;
+    --text-1: #4c4f69;
+    --text-2: #6c6f85;
+    --text-3: #9ca0b0;
+    --accent: #8839ef;
+    --accent-hover: #7287fd;
+    --text-on-accent: #eff1f5;
+}
+
+html.theme-rose-pine {
+    --surface-1: #191724;
+    --surface-2: #1f1d2e;
+    --surface-3: #26233a;
+    --surface-4: #2a2837;
+    --text-1: #e0def4;
+    --text-2: #908caa;
+    --text-3: #6e6a86;
+    --accent: #c4a7e7;
+    --accent-hover: #ebbcba;
+    --text-on-accent: #191724;
+}
+
+html.theme-palenight {
+    --surface-1: #292d3e;
+    --surface-2: #232635;
+    --surface-3: #1b1e2b;
+    --surface-4: #34324a;
+    --text-1: #a6accd;
+    --text-2: #676e95;
+    --text-3: #4e5579;
+    --accent: #c792ea;
+    --accent-hover: #89ddff;
+    --text-on-accent: #292d3e;
+}
+
+html.theme-everforest {
+    --surface-1: #2d353b;
+    --surface-2: #272e33;
+    --surface-3: #232a2e;
+    --surface-4: #343f44;
+    --text-1: #d3c6aa;
+    --text-2: #859289;
+    --text-3: #6b7b75;
+    --accent: #a7c080;
+    --accent-hover: #83c092;
+    --text-on-accent: #2d353b;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* 🏛️ COMMUNITY CLASSICS                                 */
+/* ═══════════════════════════════════════════════════════ */
+
+html.theme-dracula {
+    --surface-1: #282a36;
+    --surface-2: #21222c;
+    --surface-3: #191a21;
+    --surface-4: #44475a;
+    --text-1: #f8f8f2;
+    --text-2: #bd93f9;
+    --text-3: #6272a4;
+    --accent: #ff79c6;
+    --accent-hover: #bd93f9;
+    --text-on-accent: #282a36;
+}
+
+html.theme-nord {
+    --surface-1: #2e3440;
+    --surface-2: #292e39;
+    --surface-3: #242933;
+    --surface-4: #3b4252;
+    --text-1: #eceff4;
+    --text-2: #d8dee9;
+    --text-3: #7b88a1;
+    --accent: #88c0d0;
+    --accent-hover: #81a1c1;
+    --text-on-accent: #2e3440;
+}
+
+html.theme-tokyo-night {
+    --surface-1: #1a1b26;
+    --surface-2: #16161e;
+    --surface-3: #13131a;
+    --surface-4: #24283b;
+    --text-1: #c0caf5;
+    --text-2: #a9b1d6;
+    --text-3: #565f89;
+    --accent: #7aa2f7;
+    --accent-hover: #bb9af7;
+    --text-on-accent: #1a1b26;
+}
+
+html.theme-one-dark {
+    --surface-1: #282c34;
+    --surface-2: #21252b;
+    --surface-3: #1b1f27;
+    --surface-4: #2c313a;
+    --text-1: #abb2bf;
+    --text-2: #848b98;
+    --text-3: #5c6370;
+    --accent: #61afef;
+    --accent-hover: #c678dd;
+    --text-on-accent: #282c34;
+}
+
+html.theme-ayu-dark {
+    --surface-1: #0b0e14;
+    --surface-2: #0d1017;
+    --surface-3: #08090e;
+    --surface-4: #131721;
+    --text-1: #bfbdb6;
+    --text-2: #73808c;
+    --text-3: #545c66;
+    --accent: #e6b450;
+    --accent-hover: #ffb454;
+    --text-on-accent: #0b0e14;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* 🕹️ RETRO & VIBRANT                                    */
+/* ═══════════════════════════════════════════════════════ */
+
+html.theme-gruvbox-dark {
+    --surface-1: #282828;
+    --surface-2: #1d2021;
+    --surface-3: #181818;
+    --surface-4: #3c3836;
+    --text-1: #ebdbb2;
+    --text-2: #a89984;
+    --text-3: #7c6f64;
+    --accent: #fabd2f;
+    --accent-hover: #fe8019;
+    --text-on-accent: #282828;
+}
+
+html.theme-gruvbox-light {
+    --surface-1: #fbf1c7;
+    --surface-2: #f2e5bc;
+    --surface-3: #ebdbb2;
+    --surface-4: #d5c4a1;
+    --text-1: #3c3836;
+    --text-2: #504945;
+    --text-3: #7c6f64;
+    --accent: #d65d0e;
+    --accent-hover: #af3a03;
+    --text-on-accent: #fbf1c7;
+}
+
+html.theme-solarized-dark {
+    --surface-1: #002b36;
+    --surface-2: #073642;
+    --surface-3: #001e27;
+    --surface-4: #0a4050;
+    --text-1: #93a1a1;
+    --text-2: #839496;
+    --text-3: #586e75;
+    --accent: #2aa198;
+    --accent-hover: #268bd2;
+    --text-on-accent: #002b36;
+}
+
+html.theme-monokai-pro {
+    --surface-1: #2d2a2e;
+    --surface-2: #221f22;
+    --surface-3: #19171a;
+    --surface-4: #403e41;
+    --text-1: #fcfcfa;
+    --text-2: #c1c0c0;
+    --text-3: #727072;
+    --accent: #ffd866;
+    --accent-hover: #ff6188;
+    --text-on-accent: #2d2a2e;
+}
+
+html.theme-synthwave84 {
+    --surface-1: #262335;
+    --surface-2: #1e1a2b;
+    --surface-3: #161320;
+    --surface-4: #34294f;
+    --text-1: #e0d6f8;
+    --text-2: #b6a0e0;
+    --text-3: #7a6ba0;
+    --accent: #ff7edb;
+    --accent-hover: #36f9f6;
+    --text-on-accent: #262335;
+    --glow-color: rgba(255, 126, 219, 0.4);
+}
+
+/* --- GLASS EFFECT ENGINE --- */
+.glass-panel-overlay {
+    background: var(--panel-bg);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+}
+
+/* --- DYNAMIC ACCENT ENGINE --- */
+/* User accent selection is applied directly to documentElement.style for highest specificity.
+   This allows theme-specific accents to work correctly by default, while user choices 
+   naturally override them without breaking the cascade. */
+
+/* --- PREMIUM ANIMATED LAYERS --- */
+
+/* Cyberpunk Scanline */
+html.theme-cyberpunk::after {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 9999;
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
+    opacity: 0.3;
+}
+
+/* Animated Pulse for Accent */
+html.theme-animated-pulse .server-icon.active {
+    animation: accentPulse 2s infinite;
+}
+
+@keyframes accentPulse {
+    0% { box-shadow: 0 0 0 0 var(--accent); }
+    70% { box-shadow: 0 0 0 10px rgba(0, 0, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+}
+
+/* Sakura Petals */
+html.theme-sakura::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: url('https://www.transparenttextures.com/patterns/sakura.png');
+    animation: moveSakura 25s linear infinite;
+    opacity: 0.3;
+    z-index: -1;
+    pointer-events: none;
+}
+
+@keyframes moveSakura {
+    from { background-position: 0 0; }
+    to { background-position: 1000px 1000px; }
+}
+
+/* --- UTILITIES --- */
+.text-accent { color: var(--accent) !important; }
+.bg-accent { background: var(--accent) !important; }
+.border-accent { border-color: var(--accent) !important; }
+
+/* --- SHARED ANIMATIONS --- */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+@keyframes pop-in {
+    0% { opacity: 0; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+

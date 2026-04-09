@@ -1,0 +1,173 @@
+@model DoWeTalk.Models.RegisterViewModel
+
+@{
+    Layout = "_Layout";
+    // URL'den hangi sekmenin açılacağını alıyoruz (Giriş mi Kayıt mı?)
+    var initialMode = Context.Request.Query["mode"].ToString() == "register" ? "register" : "login";
+}
+
+<div class="auth-container d-flex align-items-center justify-content-center">
+    <div class="auth-card">
+        <div class="auth-tabs d-flex mb-4">
+            <button id="tab-login" class="tab-btn @(initialMode == "login" ? "active" : "")" onclick="switchTab('login')">Giriş Yap</button>
+            <button id="tab-register" class="tab-btn @(initialMode == "register" ? "active" : "")" onclick="switchTab('register')">Kayıt Ol</button>
+        </div>
+
+        <div id="login-section" class="auth-form-content @(initialMode == "register" ? "d-none" : "")">
+            <h2 class="text-center mb-4 glow-text-purple">Tekrar Hoş Geldin!</h2>
+            <form asp-controller="Account" asp-action="Login" method="post">
+                <div class="input-group-custom mb-3">
+                    <label>E-Posta veya Kullanıcı Adı</label>
+                    <input type="text" name="EmailOrUsername" required placeholder="NekoLover01">
+                </div>
+                <div class="input-group-custom mb-4">
+                    <label>Şifre</label>
+                    <input type="password" name="Password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-auth-submit w-100">Giriş Yap</button>
+            </form>
+        </div>
+
+        <div id="register-section" class="auth-form-content @(initialMode == "login" ? "d-none" : "")">
+            <h2 class="text-center mb-4 glow-text-purple">Aramıza Katıl</h2>
+            <form asp-controller="Account" asp-action="Register" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+
+                <div class="input-group-custom mb-3">
+                    <label asp-for="Username"></label>
+                    <input asp-for="Username" placeholder="Kullanıcı adın..." />
+                    <span asp-validation-for="Username" class="text-danger small"></span>
+                </div>
+
+                <div class="input-group-custom mb-3">
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email" placeholder="mail@example.com" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="input-group-custom mb-3">
+                    <label asp-for="Password"></label>
+                    <input asp-for="Password" placeholder="En az 8 karakter, A, a, 1..." />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="input-group-custom mb-4">
+                    <label asp-for="ConfirmPassword"></label>
+                    <input asp-for="ConfirmPassword" placeholder="Şifreni tekrarla..." />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                </div>
+
+                <button type="submit" class="btn-auth-submit w-100">Hesap Oluştur</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .auth-container {
+        min-height: 90vh;
+        background: radial-gradient(circle at center, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    }
+
+    .auth-card {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        padding: 40px;
+        border-radius: 20px;
+        width: 100%;
+        max-width: 450px;
+        box-shadow: 0 15px 35px var(--shadow-color);
+        backdrop-filter: blur(10px);
+    }
+
+    .tab-btn {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        padding: 10px;
+        font-weight: 600;
+        border-bottom: 2px solid transparent;
+        transition: 0.3s;
+    }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+        }
+
+    .glow-text-purple {
+        color: var(--text-primary);
+        text-shadow: 0 0 10px var(--accent);
+        font-weight: 800;
+    }
+
+    .input-group-custom {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+        .input-group-custom label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .input-group-custom input {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 8px;
+            color: var(--text-primary);
+            outline: none;
+            transition: 0.3s;
+        }
+
+            .input-group-custom input:focus {
+                border-color: var(--accent);
+                box-shadow: 0 0 10px var(--accent);
+            }
+
+    .btn-auth-submit {
+        background: var(--accent);
+        border: none;
+        color: var(--accent-text) !important;
+        padding: 14px;
+        border-radius: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: 0.3s;
+    }
+
+        .btn-auth-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+</style>
+
+@section Scripts {
+    <script>
+        function switchTab(type) {
+            const loginSection = document.getElementById('login-section');
+            const registerSection = document.getElementById('register-section');
+            const loginTab = document.getElementById('tab-login');
+            const registerTab = document.getElementById('tab-register');
+
+            if (type === 'login') {
+                loginSection.classList.remove('d-none');
+                registerSection.classList.add('d-none');
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+            } else {
+                loginSection.classList.add('d-none');
+                registerSection.classList.remove('d-none');
+                registerTab.classList.add('active');
+                loginTab.classList.remove('active');
+            }
+        }
+    </script>
+    <partial name="_ValidationScriptsPartial" />
+}

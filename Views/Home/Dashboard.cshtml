@@ -1,0 +1,682 @@
+@model DoWeTalk.Models.ApplicationUser
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DoWeTalk - Dashboard</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/server.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/settings.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/profile-card.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/themes.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/call.css" asp-append-version="true" />
+
+    <script>
+        // ZERO-FLICKER: Apply theme immediately before rendering
+        (function() {
+            const savedTheme = localStorage.getItem('dwt-theme') || 'theme-dark';
+            const savedAccent = localStorage.getItem('dwt-accent');
+            document.documentElement.classList.add(savedTheme);
+            if (savedAccent) {
+                document.documentElement.style.setProperty('--accent', savedAccent);
+                document.documentElement.style.setProperty('--accent-hover', savedAccent);
+                document.documentElement.style.setProperty('--user-accent', savedAccent);
+            }
+        })();
+    </script>
+    <meta name="user-auth-status" content="true" />
+
+    <style>
+        html, body, .main-wrapper {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            margin: 0;
+            background: var(--surface-1);
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .main-wrapper {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .server-sidebar {
+            width: 72px;
+            background: var(--surface-2);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .left-panel {
+            width: 240px;
+            background: var(--surface-2);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            background: var(--surface-1);
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .user-panel-bottom {
+            background: var(--surface-3);
+            padding: 8px 12px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-input-container {
+            padding: 0 16px 24px 16px;
+            background: var(--surface-1);
+        }
+
+        .custom-input-group {
+            background: var(--surface-3);
+            border-radius: 8px;
+            padding: 11px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid var(--border-subtle);
+        }
+
+            .custom-input-group input {
+                background: transparent;
+                border: none;
+                color: var(--text-1);
+                flex-grow: 1;
+                outline: none;
+                font-size: 15px;
+            }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .cursor-pointer {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="callScreen" class="call-screen">
+        <div class="caller-info">
+            <div class="caller-avatar" id="callAvatar">?</div>
+            <div class="text-center">
+                <div id="callName" class="fw-bold text-1 fs-5">Kullanıcı</div>
+                <div id="callStatusText" class="call-status">Aranıyor...</div>
+            </div>
+        </div>
+        <div class="call-btns d-flex gap-3">
+            <button id="btnAnswer" class="btn-action btn-answer" onclick="acceptCall()" style="display:none;">
+                <i class="bi bi-telephone-fill"></i>
+            </button>
+            <button class="btn-action btn-decline" onclick="endCall()">
+                <i class="bi bi-telephone-x-fill"></i>
+            </button>
+        </div>
+    </div>
+
+    <audio id="ringtone" src="/sounds/ringtone.mp3" loop></audio>
+    <audio id="calling_sound" src="/sounds/calling.mp3" loop></audio>
+
+    <div class="main-wrapper">
+        <div class="server-sidebar py-3 custom-scrollbar">
+            <div class="server-icon active mb-2" onclick="showHome()" id="homeIcon">
+                <i class="bi bi-grid-1x2-fill"></i>
+            </div>
+            <div style="width: 32px; height: 2px; background: #2d2f34; margin: 8px 0;"></div>
+            <div id="serverListContainer">
+                @if (ViewBag.UserServers != null)
+                {
+                    @foreach (var server in ViewBag.UserServers)
+                    {
+                        <div class="server-icon mb-2" onclick="selectServer(this, '@server.Name', '@server.Id.ToString()')">
+                            @server.Name[0].ToString().ToUpper()
+                        </div>
+                    }
+                }
+            </div>
+            <div class="server-icon text-success border-dashed-success mt-1" data-bs-toggle="modal" data-bs-target="#serverWizardModal">
+                <i class="bi bi-plus-lg fs-4"></i>
+            </div>
+        </div>
+
+        <div class="left-panel">
+            <div id="serverHeader" class="p-3 text-1 fw-bold d-flex justify-content-between align-items-center cursor-pointer hover-bg-dark-light" style="height: 48px; border-bottom: 1px solid var(--border-subtle);" onclick="toggleServerDropdown(event)">
+                <span class="text-truncate" id="serverHeaderName">DoWeTalk</span>
+                <i class="bi bi-chevron-down ms-1 small text-2" id="serverHeaderChevron" style="transition: transform 0.2s ease;"></i>
+            </div>
+
+            <!-- DISCORD-STYLE SERVER DROPDOWN -->
+            <div id="serverDropdownMenu" class="server-dropdown hidden" style="position: absolute; top: 48px; left: 0; width: 100%; z-index: 9999; padding: 6px 8px;">
+                <div style="background: var(--surface-4); border-radius: 6px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-high); padding: 6px; overflow: hidden;">
+                    <div class="srv-dropdown-item" onclick="openInviteModal()">
+                        <span>Sunucuya Davet Et</span>
+                        <i class="bi bi-person-plus-fill" style="color: var(--accent);"></i>
+                    </div>
+                    <div class="srv-dropdown-item" id="menuServerSettings" onclick="openServerSettings()" style="display: none;">
+                        <span>Sunucu Ayarları</span>
+                        <i class="bi bi-gear-fill text-2"></i>
+                    </div>
+                    <div class="srv-dropdown-item" onclick="openNotificationSettingsModal()">
+                        <span>Bildirim Ayarları</span>
+                        <i class="bi bi-bell-fill text-2"></i>
+                    </div>
+                    <div class="srv-dropdown-item" onclick="showAddChannelModal(false, null)">
+                        <span>Kanal Oluştur</span>
+                        <i class="bi bi-plus-circle-fill" style="color: var(--status-success);"></i>
+                    </div>
+                    <div style="height: 1px; background: var(--border-subtle); margin: 4px 0;"></div>
+                    <div class="srv-dropdown-item srv-dropdown-danger" onclick="leaveServer()">
+                        <span>Sunucudan Ayrıl</span>
+                        <i class="bi bi-box-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-grow-1 overflow-auto custom-scrollbar">
+                <div id="friendsNavSection">
+                    <div class="nav-item active mx-2 mt-2" onclick="showHome()">
+                        <i class="bi bi-chat-heart-fill me-2"></i> Mesajlar
+                    </div>
+                    <div class="section-title px-3 mt-4 text-uppercase text-3 small fw-bold" style="font-size: 10px; letter-spacing: 0.05em;">Direkt Mesajlar</div>
+                    <div id="directMessagesList"></div>
+                </div>
+    <div id="serverChannelsSection" class="hidden" style="min-height: 100%;"></div>
+            </div>
+
+            <div id="voicePanelSidebar" class="voice-panel-sidebar">
+                <div class="voice-info-header">
+                    <div class="voice-status-green"><i class="fas fa-signal"></i> Seste</div>
+                    <div id="callTimer">0:00</div>
+                </div>
+                <div class="voice-user-row">
+                    <div class="sidebar-target-name" id="sidebarTargetName">Kullanıcı</div>
+                    <div class="voice-actions">
+                        <button onclick="toggleMic()" id="btnMicSidebar" class="btn-v" title="Mikrofonu Sustur"><i class="fas fa-microphone"></i></button>
+                        <button onclick="toggleDeafen()" id="btnDeafenSidebar" class="btn-v" title="Sağırlaştır"><i class="fas fa-headphones"></i></button>
+                        <button onclick="endCall()" class="btn-v red-hangup" title="Bağlantıyı Kes"><i class="fas fa-phone-slash"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="user-panel-bottom">
+                <div class="d-flex align-items-center min-w-0">
+                    <div style="width:32px; height:32px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; color:var(--text-on-accent); font-weight:600; flex-shrink:0;">@Model.UserName[0].ToString().ToUpper()</div>
+                    <div class="user-info-text ms-2 overflow-hidden">
+                        <div class="text-1 fw-bold small text-truncate">@Model.UserName</div>
+                        <div class="text-success" style="font-size: 10px; line-height: 1; font-weight: 700;">Çevrimiçi</div>
+                    </div>
+                </div>
+                <div class="user-actions">
+                    <i class="bi bi-gear-wide-connected text-2 cursor-pointer" onclick="openSettings()"></i>
+                    <a href="/Account/Logout" class="text-2"><i class="bi bi-power"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div id="friendsView" class="h-100 flex-column d-flex">
+                <div class="p-3 d-flex align-items-center" style="height: 48px; border-bottom: 1px solid var(--border-subtle);">
+                    <div class="text-1 fw-bold me-3 pe-3" style="border-right: 1px solid var(--border-subtle);">Arkadaşlar</div>
+                    <div class="header-tab active" onclick="filterFriends('online', this)">Çevrimiçi</div>
+                    <div class="header-tab" onclick="filterFriends('all', this)">Tümü</div>
+                    <div class="header-tab" onclick="filterFriends('pending', this)">Bekleyenler</div>
+                    <div class="header-tab" onclick="filterFriends('blocked', this)">Engellenenler</div>
+                    <div class="header-tab btn-add bg-success text-1 px-2 rounded ms-2 fw-bold" onclick="filterFriends('add', this)">Arkadaş Ekle</div>
+                </div>
+                <div id="friendsListArea" class="p-4 flex-grow-1 overflow-auto custom-scrollbar">
+                    <div id="friendsListContent"></div>
+                </div>
+            </div>
+
+            <div id="chatView" class="hidden h-100 flex-column">
+                <div class="p-3 d-flex align-items-center justify-content-between" style="height: 48px; border-bottom: 1px solid var(--border-subtle);">
+                    <div class="d-flex align-items-center">
+                        <i id="chatHeaderHashIcon" class="bi bi-hash text-2 fs-4 me-2"></i>
+                        <i id="chatHeaderAtIcon" class="bi bi-at text-2 fs-4 me-2 hidden"></i>
+                        <span id="chatHeaderName" class="text-1 fw-bold">Sohbet</span>
+                    </div>
+                    <div id="chatHeaderCallActions" class="call-actions d-flex gap-3 me-2">
+                        <i class="bi bi-telephone-fill text-2 cursor-pointer fs-5" onclick="startVoiceCall()" title="Sesli Arama"></i>
+                        <i class="bi bi-camera-video-fill text-2 cursor-pointer fs-5" onclick="startVideoCall()" title="Görüntülü Arama"></i>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-grow-1 overflow-hidden">
+                    <!-- Chat Content Area -->
+                    <div class="d-flex flex-column flex-grow-1 min-w-0">
+                        <div id="voiceContainerDm" class="voice-container-dm">
+                            <div class="participant" id="myParticipant">
+                                <div class="avatar-wrapper">@Model.UserName[0].ToString().ToUpper()</div>
+                                <div class="status-badge mic" id="myMicBadge"><i class="fas fa-microphone-slash"></i></div>
+                            </div>
+
+                            <div class="dm-call-controls">
+                                <button onclick="toggleMic()" id="btnMicDm" class="btn-dm-ctrl" title="Mikrofon"><i class="fas fa-microphone"></i></button>
+                                <button onclick="toggleDeafen()" id="btnDeafenDm" class="btn-dm-ctrl" title="Sağırlaştır"><i class="fas fa-headphones"></i></button>
+                                <button onclick="endCall()" class="btn-dm-ctrl hangup" title="Kapat"><i class="fas fa-phone-slash"></i></button>
+                            </div>
+
+                            <div class="participant" id="remoteParticipant">
+                                <div class="avatar-wrapper" id="dmRemoteAvatar">?</div>
+                                <div class="status-badge mic" id="remoteMicBadge"><i class="fas fa-microphone-slash"></i></div>
+                                <div class="status-badge deaf" id="remoteDeafBadge"><i class="fas fa-volume-mute"></i></div>
+                            </div>
+                        </div>
+
+                        <div id="messageList" class="flex-grow-1 overflow-auto p-4 custom-scrollbar"></div>
+
+                        <div class="chat-input-container">
+                            <div class="custom-input-group">
+                                <input type="text" id="chatInput" placeholder="Mesaj gönder...">
+                                <i class="bi bi-emoji-smile-fill text-2 cursor-pointer fs-5"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Member Panel (Right Sidebar) -->
+                    <div id="serverMemberPanel" class="member-panel hidden">
+                        <div class="p-3 pb-1">
+                            <div class="text-3 fw-bold text-uppercase" style="font-size: 11px; letter-spacing: 0.1em;">Üyeler — <span id="memberCount">0</span></div>
+                        </div>
+                        <div id="serverMemberListContent" class="p-2 custom-scrollbar overflow-auto flex-grow-1">
+                            <!-- Skeletons -->
+                            <div class="member-skeleton p-2 mb-1 animate__animated animate__pulse animate__infinite">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle me-2" style="width: 32px; height: 32px; background: var(--surface-ghost);"></div>
+                                    <div class="rounded" style="width: 100px; height: 12px; background: var(--surface-ghost);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @await Html.PartialAsync("_SettingsPartial", Model)
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    @Html.AntiForgeryToken()
+    <script>
+        // CSRF Fix: Attach Anti-Forgery Token to all jQuery AJAX requests
+        // Required because Dashboard sets Layout = null
+        $.ajaxSetup({
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+
+    <script src="/js/server-manager.js" asp-append-version="true"></script>
+    <script src="/js/dashboard.js" asp-append-version="true"></script>
+    <script src="/js/settings.js" asp-append-version="true"></script>
+    <script src="/js/profile-manager.js" asp-append-version="true"></script>
+    <script src="/js/theme-manager.js" asp-append-version="true"></script>
+    <script src="/js/call.js" asp-append-version="true"></script>
+
+    <script>
+        window.currentUserName = "@Model.UserName";
+        $(document).ready(function() {
+            if(typeof showHome === 'function') showHome();
+        });
+    </script>
+    <!-- UNIFIED SERVER WIZARD (DISCORD STYLE) -->
+    <div class="modal fade" id="serverWizardModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content server-wizard-card border-0">
+                
+                <!-- STEP 1: CHOOSE ACTION -->
+                <div id="wizardStep1" class="wizard-step">
+                    <h2 class="wizard-title">Bir Sunucu Oluştur</h2>
+                    <p class="wizard-subtitle">Sunucun, senin ve arkadaşlarının takıldığı yerdir. Kendininkini oluştur ve konuşmaya başla.</p>
+                    
+                    <div class="wizard-option-card" onclick="goToWizardStep(2)">
+                        <div class="wizard-option-icon"><i class="bi bi-plus-lg"></i></div>
+                        <div class="wizard-option-text">
+                            <div class="wizard-option-title">Kendim Oluşturayım</div>
+                            <div class="small text-2">Sıfırdan tertemiz bir sunucu.</div>
+                        </div>
+                        <i class="bi bi-chevron-right text-2"></i>
+                    </div>
+
+                    <div class="mt-4 text-center">
+                        <div class="wizard-title fs-5 mb-2">Zaten bir davetin mi var?</div>
+                        <button class="create-btn-discord w-100 py-2 fw-bold" onclick="goToWizardStep(3)" style="background: #4f545c !important;">Bir Sunucuya Katıl</button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: CREATE DETAILS -->
+                <div id="wizardStep2" class="wizard-step hidden">
+                    <h2 class="wizard-title">Sunucunu Özelleştir</h2>
+                    <p class="wizard-subtitle">Yeni sunucuna bir isim ve kişilik ver. Bunu daha sonra her zaman değiştirebilirsin.</p>
+                    
+                    <div class="text-center mb-4">
+                        <div style="width: 80px; height: 80px; background: var(--surface-3); border: 2px dashed var(--border-strong); border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Simge Yükle (Yakında)">
+                            <i class="bi bi-camera-fill fs-2" style="color: var(--text-3);"></i>
+                        </div>
+                        <div class="small mt-2" style="color: var(--text-2);">SUNUCU SİMGESİ</div>
+                    </div>
+
+                    <div class="wizard-input-group mb-4">
+                        <div class="wizard-control-label">SUNUCU ADI</div>
+                        <input type="text" id="wizardServerName" class="form-control wizard-input" placeholder="@Model.UserName'ın sunucusu" maxlength="32">
+                        <div id="wizardError" class="text-danger small mt-1 hidden">Lütfen geçerli bir isim girin.</div>
+                    </div>
+
+                    <div class="wizard-footer">
+                        <button class="wizard-back-btn" onclick="goToWizardStep(1)">Geri</button>
+                        <button id="btnCreateFinal" class="create-btn-discord" onclick="executeCreateServer()">Oluştur</button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: JOIN SERVER -->
+                <div id="wizardStep3" class="wizard-step hidden">
+                    <h2 class="wizard-title">Bir Sunucuya Katıl</h2>
+                    <p class="wizard-subtitle">Aşağıya bir davet kodu girerek mevcut bir sunucuya katılabilirsin.</p>
+                    
+                    <div class="wizard-input-group mb-4">
+                        <div class="wizard-control-label">DAVET BAĞLANTISI VEYA KODU</div>
+                        <input type="text" id="wizardInviteCode" class="form-control wizard-input" placeholder="Örn: HT72JS8A">
+                        <div class="text-2 small mt-2">Davet kodları şuna benzer: <span class="text-1 fw-bold">HT72JS8A</span></div>
+                        <div id="wizardJoinError" class="text-danger small mt-1 hidden" style="color: #fa777c !important;">Geçersiz veya süresi dolmuş kod.</div>
+                    </div>
+
+                    <div class="wizard-footer">
+                        <button class="wizard-back-btn" onclick="goToWizardStep(1)">Geri</button>
+                        <button id="btnJoinFinal" class="create-btn-discord" onclick="executeJoinServer()">Sunucuya Katıl</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- SERVER INVITE MODAL (DISCORD STYLE) -->
+    <div class="modal fade" id="serverInviteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 overflow-hidden" style="background: var(--surface-4); border-radius: 8px; color: var(--text-1);">
+                <!-- Step 1: Create Invite -->
+                <div id="inviteStepCreate">
+                    <div class="modal-header border-0 pb-0 pe-2 pt-2">
+                        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" style="font-size: 10px;"></button>
+                    </div>
+                    <div class="modal-body px-4 pb-4 pt-0">
+                        <h5 class="fw-bold mb-1">Arkadaşlarını Davet Et</h5>
+                        <p class="text-2 small mb-4">Sunucuna katılmaları için özel bir davet kodu oluştur veya boş bırakıp otomatik oluştur.</p>
+                        
+                        <div class="mb-4">
+                            <label class="small text-2 mb-2 fw-bold text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">ÖZEL DAVET KODU (isteğe bağlı)</label>
+                            <input type="text" id="customInviteInput" class="form-control py-2" style="background: var(--surface-3); border: 1px solid var(--border-subtle); color: var(--text-1); border-radius: 6px;" placeholder="Örn: tombisland" maxlength="20">
+                            <div class="small text-2 mt-2">Bu kod sunucuna özel bir link oluşturur: <span style="color: var(--accent);">dowetalk.sv/(kod)</span></div>
+                        </div>
+
+                        <button class="btn w-100 py-2 fw-bold" style="background: var(--accent); color: var(--text-on-accent); border-radius: 6px;" onclick="generateCustomInvite()">Davet Oluştur</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Success -->
+                <div id="inviteStepSuccess" class="hidden">
+                    <div class="modal-header border-0 pb-0 pe-2 pt-2">
+                        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" style="font-size: 10px;"></button>
+                    </div>
+                    <div class="modal-body px-4 pb-4 pt-0">
+                        <div class="text-center mb-4 mt-2">
+                            <div class="success-icon mb-3"><i class="bi bi-check2-circle fs-1" style="color: var(--status-success);"></i></div>
+                            <h5 class="fw-bold mb-1">Davet Oluşturuldu!</h5>
+                            <p class="text-2 small">Bu bağlantıyı arkadaşlarınla paylaş.</p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="small text-2 mb-2 fw-bold text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">DAVET BAĞLANTISI</label>
+                            <div class="d-flex p-1 overflow-hidden" style="background: var(--surface-3); border-radius: 6px; border: 1px solid var(--border-subtle);">
+                                <input type="text" id="finalInviteUrl" class="bg-transparent border-0 flex-grow-1 px-2 py-1 small" readonly style="outline: none; color: var(--text-1);">
+                                <button class="btn px-4 py-1 small fw-bold" style="background: var(--accent); color: var(--text-on-accent); border-radius: 4px;" onclick="copyInviteUrl()">Kopyala</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION SETTINGS MODAL -->
+    <div class="modal fade" id="notificationSettingsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+            <div class="modal-content border-0 shadow-lg" style="background: var(--surface-4); border-radius: 8px; color: var(--text-1);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold">Bildirim Ayarları</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" style="font-size: 10px;"></button>
+                </div>
+                <div class="modal-body px-4 pb-4">
+                    <p class="text-2 small mb-4">Bu sunucu için bildirim tercihlerinizi yönetin.</p>
+
+                    <div class="d-flex justify-content-between align-items-center py-3" style="border-bottom: 1px solid var(--border-subtle);">
+                        <div>
+                            <div class="fw-bold small">Tüm Mesajları Sustur</div>
+                            <div class="text-3" style="font-size: 12px;">Bu sunucudan bildirim almayı durdur.</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notifMuteAll" style="width: 40px; height: 20px; cursor: pointer;">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center py-3" style="border-bottom: 1px solid var(--border-subtle);">
+                        <div>
+                            <div class="fw-bold small">@@everyone Sustur</div>
+                            <div class="text-3" style="font-size: 12px;">@@everyone ve @@here bahsetmelerini gizle.</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notifMuteEveryone" style="width: 40px; height: 20px; cursor: pointer;">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center py-3">
+                        <div>
+                            <div class="fw-bold small">Rol Bahsetmelerini Sustur</div>
+                            <div class="text-3" style="font-size: 12px;">Rol etiketlemelerini gizle.</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notifMuteRoles" style="width: 40px; height: 20px; cursor: pointer;">
+                        </div>
+                    </div>
+
+                    <button class="btn w-100 py-2 fw-bold mt-3" style="background: var(--accent); color: var(--text-on-accent); border-radius: 6px;" onclick="saveNotificationSettings()">Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PREMIUM SERVER SETTINGS OVERLAY -->
+    <div id="premiumSettingsOverlay" class="settings-overlay">
+        <div class="settings-sidebar custom-scrollbar">
+            <div class="settings-nav-header">SUNUCU AYARLARI</div>
+            <div class="settings-nav-item active" onclick="showSettingsSection('overview')">Genel Bakış</div>
+            <div class="settings-nav-item" onclick="showSettingsSection('categories')">Kategoriler</div>
+            <div class="settings-nav-item" onclick="showSettingsSection('roles')">Roller</div>
+            <div class="settings-nav-item" onclick="openNotificationSettings()">Bildirim Ayarları</div>
+            
+            <div class="settings-nav-header">YÖNETİM</div>
+            <div class="settings-nav-item" style="color: #fa777c;" onclick="leaveServer()">Sunucudan Ayrıl <i class="bi bi-box-arrow-right ms-1"></i></div>
+        </div>
+
+        <div class="settings-content-wrapper custom-scrollbar">
+            <div class="settings-close-btn" onclick="closePremiumSettings()">
+                <i class="bi bi-x-lg"></i>
+                <div style="position:absolute; bottom:-20px; font-size:10px; font-weight:bold;">ESC</div>
+            </div>
+
+            <!-- SECTION: OVERVIEW -->
+            <div id="section-overview" class="settings-section">
+                <h2 class="settings-section-title">Sunucuya Genel Bakış</h2>
+                
+                <div class="row g-4">
+                    <div class="col-md-7">
+                        <div class="mb-4">
+                            <label class="small text-2 mb-2 fw-bold text-uppercase">SUNUCU ADI</label>
+                            <input type="text" id="settingServerName" class="form-control discord-input py-2">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="small text-2 mb-2 fw-bold text-uppercase">ÖZEL SUNUCU URL (VANITY URL)</label>
+                            <div class="discord-input-group d-flex align-items-center p-2">
+                                <span class="text-2 me-1">dowetalk.sv/</span>
+                                <input type="text" id="settingVanityUrl" class="bg-transparent border-0 text-1 flex-grow-1" placeholder="sunucu-isminiz" style="outline: none;">
+                            </div>
+                            <div id="settingVanityMsg" class="mt-2 small"></div>
+                        </div>
+
+                        <button class="btn btn-indigo px-4 py-2 mt-2 fw-bold" onclick="saveServerProfile()">Değişiklikleri Kaydet</button>
+                    </div>
+
+                    <div class="col-md-5">
+                        <label class="small text-2 mb-3 fw-bold text-uppercase d-block">SUNUCU PROFİLİ ÖNİZLEMESİ</label>
+                        <div class="server-profile-card">
+                            <div id="previewBanner" class="server-banner-preview">
+                                <div class="server-icon-preview-wrapper">
+                                    <div id="previewIcon" class="server-icon-preview">S</div>
+                                </div>
+                            </div>
+                            <div class="server-profile-details">
+                                <div id="previewName" class="server-profile-name">Sunucu Adı</div>
+                                <div class="text-2 small">3 Çevrimiçi • 4 Üye</div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-dark-light btn-sm w-100 mb-2" onclick="alert('İkon yükleme yakında eklenecek!')">İkon Değiştir</button>
+                            <button class="btn btn-dark-light btn-sm w-100" onclick="alert('Afiş yükleme yakında eklenecek!')">Afiş Değiştir</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: CATEGORIES -->
+            <div id="section-categories" class="settings-section hidden">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="settings-section-title mb-0">Sunucu Kategorileri</h2>
+                    <button class="btn btn-success btn-sm px-3" onclick="showCreateCategoryModal()">Kategori Ekle</button>
+                </div>
+
+                <div id="settingsCategoryList" class="settings-item-list">
+                    <!-- Kategoriler buraya yüklenecek -->
+                </div>
+            </div>
+
+            <!-- SECTION: ROLES -->
+            <div id="section-roles" class="settings-section hidden">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="settings-section-title mb-0">Sunucu Rolleri</h2>
+                    <button class="btn btn-success btn-sm px-3" onclick="createNewRole()">Rol Oluştur</button>
+                </div>
+
+                <div class="row h-100" style="min-height: 400px;">
+                    <div class="col-md-4 border-end border-subtle pe-3">
+                        <div id="settingsRoleList" class="settings-item-list">
+                            <!-- Roller buraya yüklenecek -->
+                        </div>
+                    </div>
+                    <div class="col-md-8 ps-3" id="roleEditContainer">
+                        <div class="text-center text-2 mt-5">
+                            <i class="bi bi-shield-lock-fill display-1 opacity-25"></i>
+                            <p class="mt-3">Düzenlemek için bir rol seçin.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE CATEGORY MODAL -->
+    <div class="modal fade" id="createCategoryModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="background: var(--surface-4); border-radius: 8px; color: var(--text-1);">
+                <div class="modal-header border-0"><h5 class="fw-bold">Kategori Oluştur</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body p-4">
+                    <label class="small text-2 mb-2 fw-bold text-uppercase" style="font-size: 11px;">KATEGORİ ADI</label>
+                    <input type="text" id="newCategoryName" class="form-control" style="background: var(--surface-3); border: 1px solid var(--border-subtle); color: var(--text-1); border-radius: 6px; padding: 10px;" placeholder="yeni-kategori">
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button class="btn w-100 py-2 fw-bold" style="background: var(--accent); color: var(--text-on-accent); border-radius: 6px;" onclick="createCategory()">Kategori Oluştur</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ADD CHANNEL MODAL -->
+    <div class="modal fade" id="addChannelModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="background: var(--surface-4); border-radius: 8px; color: var(--text-1);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold mb-0">Kanal Oluştur</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" style="font-size: 10px;"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="small text-2 mb-2 fw-bold text-uppercase" style="font-size: 11px;">KANAL TÜRÜ</label>
+                        <div class="d-flex gap-2 mb-3">
+                            <label class="d-flex align-items-center gap-2 p-3 flex-grow-1" style="background: var(--surface-3); border: 2px solid var(--accent); border-radius: 8px; cursor: pointer;" id="channelTypeTextLabel">
+                                <input type="radio" name="channelTypeRadio" value="text" checked onchange="switchChannelType('text')" style="accent-color: var(--accent); width: 16px; height: 16px;">
+                                <i class="bi bi-hash" style="font-size: 18px;"></i>
+                                <div>
+                                    <div class="fw-bold small">Metin Kanalı</div>
+                                    <div class="text-3" style="font-size: 11px;">Mesaj gönder, resim paylaş</div>
+                                </div>
+                            </label>
+                            <label class="d-flex align-items-center gap-2 p-3 flex-grow-1" style="background: var(--surface-3); border: 2px solid var(--border-subtle); border-radius: 8px; cursor: pointer;" id="channelTypeVoiceLabel">
+                                <input type="radio" name="channelTypeRadio" value="voice" onchange="switchChannelType('voice')" style="accent-color: var(--accent); width: 16px; height: 16px;">
+                                <i class="bi bi-volume-up-fill" style="font-size: 18px;"></i>
+                                <div>
+                                    <div class="fw-bold small">Ses Kanalı</div>
+                                    <div class="text-3" style="font-size: 11px;">Sesli sohbet, birlikte takıl</div>
+                                </div>
+                            </label>
+                        </div>
+                        <input type="hidden" id="addChannelIsVoice" value="false">
+                    </div>
+                    <div class="mb-2">
+                        <label class="small text-2 mb-2 fw-bold text-uppercase" style="font-size: 11px;">KANAL ADI</label>
+                        <div class="d-flex align-items-center p-2" style="background: var(--surface-3); border-radius: 6px; border: 1px solid var(--border-subtle);">
+                            <span id="channelNamePrefix" class="text-2 me-1">#</span>
+                            <input type="text" id="addChannelInput" class="bg-transparent border-0 flex-grow-1" placeholder="yeni-kanal" style="outline: none; color: var(--text-1);">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button class="btn w-100 py-2 fw-bold" style="background: var(--accent); color: var(--text-on-accent); border-radius: 6px;" onclick="createChannel()">Kanal Oluştur</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu shadow-lg animate__animated animate__fadeIn animate__faster hidden" style="position: absolute; z-index: 9999; background: var(--surface-3); border-radius: 4px; border: 1px solid var(--border-subtle); min-width: 180px; padding: 4px;">
+        <ul id="contextMenuList" class="list-unstyled mb-0 py-1">
+            <!-- Menü öğeleri dinamik olarak buraya gelecek -->
+        </ul>
+    </div>
+</body>
+</html>

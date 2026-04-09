@@ -1,0 +1,299 @@
+/* --- DASHBOARD: VARIABLE-DRIVEN STYLES --- */
+
+body, html {
+    height: 100%;
+    margin: 0;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    overflow: hidden;
+}
+
+.main-wrapper {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* 1. SUNUCU SIDEBAR */
+.server-sidebar {
+    width: 72px;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 15px;
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+/* BUTON VE İKON ANİMASYONLARI */
+.server-icon, .nav-item, .header-tab, .btn, .user-avatar-small {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.server-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--card-bg);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.server-icon:hover, .server-icon.active {
+    border-radius: 15px;
+    background-color: var(--accent);
+    color: var(--accent-text);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px var(--shadow-color);
+}
+
+/* 2. SOL PANEL */
+.left-panel {
+    width: 240px;
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.nav-item {
+    padding: 8px 12px;
+    margin: 2px 8px;
+    border-radius: 8px;
+    color: var(--text-secondary);
+}
+
+.nav-item:hover {
+    background-color: var(--hover-bg);
+    color: var(--text-primary);
+    padding-left: 16px;
+}
+
+.nav-item.active {
+    background-color: var(--active-bg);
+    color: var(--text-1);
+    font-weight: 700;
+}
+
+/* 3. ANA İÇERİK VE MESAJLAR */
+#messageList {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 25px;
+    gap: 12px;
+    overflow-y: auto;
+    background-color: var(--bg-primary);
+}
+
+.message {
+    display: flex;
+    flex-direction: column;
+    max-width: 65%;
+    position: relative;
+    margin-bottom: 4px;
+}
+
+.message.my-message { align-self: flex-end; }
+.message.other-message { align-self: flex-start; }
+
+.message-content {
+    padding: 10px 16px;
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease;
+}
+
+.message:hover .message-content { transform: scale(1.01); }
+
+.message.my-message .message-content {
+    background: var(--bg-tertiary);
+    border-radius: 18px 18px 4px 18px;
+    border-right: 3px solid var(--accent);
+    box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.message.other-message .message-content {
+    background: var(--bg-secondary);
+    border-radius: 18px 18px 18px 4px;
+    border-left: 3px solid var(--text-muted);
+    box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.message-author {
+    font-size: 0.75rem;
+    font-weight: 800;
+    margin-bottom: 3px;
+    color: var(--accent);
+}
+
+.message-text {
+    color: var(--text-primary);
+    word-wrap: break-word;
+    line-height: 1.45;
+}
+
+.message-time {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 5px;
+}
+
+/* 4. INPUT ALANI */
+.input-wrapper, .custom-input-group {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 8px 15px;
+    transition: border-color 0.2s ease;
+}
+
+.input-wrapper:focus-within, .custom-input-group:focus-within {
+    border-color: var(--accent);
+}
+
+#chatInput {
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-primary) !important;
+    box-shadow: none !important;
+    font-size: 0.95rem;
+}
+
+/* 5. ALT KULLANICI PANELİ */
+.user-panel-bottom {
+    margin-top: auto;
+    padding: 12px 15px;
+    background: var(--bg-tertiary);
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-avatar-small {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--accent-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* 6. ÜYE SIDEBAR */
+.member-sidebar, .member-panel {
+    width: 240px;
+    background-color: var(--bg-secondary);
+    border-left: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+}
+
+.header-tab {
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.header-tab:hover {
+    background-color: var(--hover-bg);
+    color: var(--text-primary);
+}
+
+.header-tab.active {
+    background-color: var(--active-bg);
+    color: var(--text-1);
+    font-weight: 700;
+}
+
+.hidden { display: none !important; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: var(--card-bg);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* --- ADD FRIEND VIEW SPECIFIC FIXES --- */
+.add-friend-input-wrapper:focus-within {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px var(--accent-soft) !important;
+}
+
+.add-friend-input {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 1.05rem !important;
+    letter-spacing: 0.3px !important;
+    box-shadow: none !important;
+    outline: none !important;
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif !important;
+}
+
+/* Explicit Placeholder Hierarchy */
+.add-friend-input::placeholder {
+    color: var(--text-3) !important;
+    opacity: 0.7 !important;
+    font-weight: 400 !important;
+}
+
+/* Light Theme Overrides (Prevents #ffffff from vanishing on bright backgrounds) */
+html.theme-sakura .add-friend-input,
+html.theme-frost .add-friend-input,
+html.theme-cotton-candy .add-friend-input,
+html.theme-banana .add-friend-input,
+html.theme-asiimov .add-friend-input {
+    color: #1a1a1a !important; /* Darken for readability on pure light themes */
+}
+
+/* 10. SERVER DROPDOWN MENU */
+.left-panel { position: relative; }
+
+.srv-dropdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.srv-dropdown-item:hover {
+    background: var(--accent);
+    color: var(--text-on-accent);
+}
+
+.srv-dropdown-item:hover i {
+    color: var(--text-on-accent) !important;
+}
+
+.srv-dropdown-danger {
+    color: var(--status-danger);
+}
+
+.srv-dropdown-danger:hover {
+    background: var(--status-danger);
+    color: #ffffff;
+}
+
+.server-dropdown-open #serverHeaderChevron {
+    transform: rotate(180deg);
+}

@@ -1,0 +1,115 @@
+/* --- SETTINGS: VARIABLE-DRIVEN STYLES --- */
+
+#settingsOverlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: var(--bg-primary);
+    z-index: 10000;
+    display: none;
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+}
+
+.settings-sidebar-nav {
+    width: 280px;
+    background: var(--bg-secondary);
+    padding: 60px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border-color);
+}
+
+.settings-link {
+    width: 190px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    margin-bottom: 2px;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+
+.settings-link:hover { background: var(--hover-bg); color: var(--text-primary); }
+.settings-link.active { background: var(--active-bg); color: var(--text-primary); font-weight: 600; }
+
+.settings-body {
+    flex-grow: 1;
+    padding: 60px 40px;
+    position: relative;
+    overflow-y: auto;
+    background: var(--bg-primary);
+}
+
+.settings-section {
+    max-width: 700px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.volume-group {
+    background: var(--bg-tertiary);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+}
+
+/* --- THEME GALLERY --- */
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.theme-card {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.theme-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+.theme-card.active { border-color: var(--accent); box-shadow: 0 0 15px var(--accent); }
+
+.theme-preview {
+    height: 80px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+}
+
+/* --- ACCENT PICKER --- */
+.accent-picker-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.accent-swatch {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: transform 0.2s;
+}
+
+.accent-swatch:hover { transform: scale(1.1); }
+.accent-swatch.active { border-color: var(--text-primary); transform: scale(1.1); }
+
+/* --- ANIMATIONS --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

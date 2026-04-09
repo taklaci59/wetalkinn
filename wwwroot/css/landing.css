@@ -1,0 +1,111 @@
+.hero-container {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    overflow: hidden;
+    position: relative;
+}
+
+.hero-title {
+    font-size: 5rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 2rem;
+    color: var(--text-primary);
+    letter-spacing: -1px;
+}
+
+.glow-text {
+    color: var(--text-accent);
+    position: relative;
+    display: inline-block;
+    text-shadow: 0 0 30px var(--glow-color);
+    animation: accentShimmer 3s infinite alternate;
+}
+
+@keyframes accentShimmer {
+    from { opacity: 0.9; text-shadow: 0 0 20px var(--glow-color); }
+    to { opacity: 1; text-shadow: 0 0 50px var(--glow-color); }
+}
+
+.hero-subtitle {
+    font-size: 1.3rem;
+    color: var(--text-secondary);
+    max-width: 550px;
+    line-height: 1.6;
+}
+
+.btn-primary-neon {
+    background: var(--accent) !important;
+    color: var(--accent-text) !important;
+    border: none;
+    padding: 18px 45px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 1.15rem;
+    box-shadow: 0 8px 25px rgba(124, 92, 255, 0.4);
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-decoration: none;
+    display: inline-block;
+    position: relative;
+    z-index: 5;
+}
+
+.btn-primary-neon:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px var(--glow-color);
+    background: var(--accent-hover) !important;
+}
+
+.btn-outline-neon {
+    background: rgba(255,255,255,0.03);
+    color: var(--text-primary) !important;
+    border: 2px solid var(--accent);
+    padding: 16px 43px;
+    border-radius: 14px;
+    font-weight: 700;
+    transition: 0.3s;
+    backdrop-filter: blur(10px);
+}
+
+.btn-outline-neon:hover {
+    background: var(--hover-bg);
+    box-shadow: 0 0 20px rgba(124, 92, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.glow-sphere {
+    position: absolute;
+    top: 20%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--orb-color) 0%, transparent 70%);
+    filter: blur(80px);
+    opacity: 0.5;
+    z-index: 1;
+    animation: orbDrift 20s infinite alternate ease-in-out;
+}
+
+@keyframes orbDrift {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(-50px, 30px) scale(1.1); }
+}
+
+.anime-hero-img {
+    position: relative;
+    z-index: 2;
+    max-height: 80vh;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 0 50px rgba(124, 92, 255, 0.3));
+    animation: float 6s ease-in-out infinite;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.anime-hero-img:hover {
+    transform: scale(1.02) rotate(1deg);
+    filter: drop-shadow(0 0 70px rgba(124, 92, 255, 0.5));
+}
+
+.animate-pop-in {
+    animation: pop-in 1s cubic-bezier(0.19, 1, 0.22, 1);
+}

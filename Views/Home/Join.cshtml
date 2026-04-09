@@ -1,0 +1,163 @@
+@model DoWeTalk.Models.JoinViewModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Davet Edildin - @Model.Name</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/themes.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        // ZERO-FLICKER: Apply theme immediately before rendering
+        (function() {
+            const savedTheme = localStorage.getItem('dwt-theme') || 'theme-dark';
+            const savedAccent = localStorage.getItem('dwt-accent');
+            document.documentElement.classList.add(savedTheme);
+            if (savedAccent) {
+                document.documentElement.style.setProperty('--accent', savedAccent);
+                document.documentElement.style.setProperty('--accent-hover', savedAccent);
+                document.documentElement.style.setProperty('--user-accent', savedAccent);
+            }
+        })();
+    </script>
+
+    <style>
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .join-card {
+            background-color: var(--bg-tertiary);
+            width: 480px;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px var(--shadow-color);
+            text-align: center;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+
+        .server-icon-large {
+            width: 100px;
+            height: 100px;
+            background-color: var(--accent);
+            color: var(--accent-text);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 600;
+            margin: 0 auto 24px;
+            box-shadow: 0 4px 15px var(--accent);
+        }
+
+        .server-name {
+            color: var(--text-primary);
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .status-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+
+        .dot-online { background-color: var(--success); }
+        .dot-total { background-color: var(--text-muted); }
+
+        .creation-date {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+        }
+
+        .btn-join {
+            background-color: var(--accent);
+            color: var(--accent-text);
+            border: none;
+            width: 100%;
+            padding: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+
+        .btn-join:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .error-msg {
+            background-color: rgba(242, 63, 66, 0.1);
+            color: var(--danger);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            border: 1px solid var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <div class="join-card">
+        <div class="server-icon-large">
+            @Model.Name[0].ToString().ToUpper()
+        </div>
+        
+        <h1 class="server-name">@Model.Name</h1>
+        
+        <div class="status-info">
+            <span><span class="status-dot dot-online"></span> 0 Çevrimiçi</span>
+            <span><span class="status-dot dot-total"></span> @Model.MemberCount Üye</span>
+        </div>
+
+        <div class="creation-date">
+            Oluşturulma: @Model.CreatedAt.ToString("MMM yyyy")
+        </div>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="error-msg">@ViewBag.Error</div>
+        }
+
+        <form asp-action="JoinServerFinal" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="inviteCode" value="@Model.InviteCode" />
+            <button type="submit" class="btn-join">Katıl</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

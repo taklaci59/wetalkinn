@@ -1,0 +1,93 @@
+/* --- USER PROFILE POPOUT (DISCORD STYLE) --- */
+.profile-card {
+    position: absolute;
+    width: 300px;
+    background: var(--bg-tertiary);
+    border-radius: 16px;
+    box-shadow: 0 8px 16px var(--shadow-color);
+    z-index: 10001;
+    overflow: hidden;
+    display: none;
+    border: 1px solid var(--border-color);
+    animation: profileAppear 0.2s ease-out;
+}
+
+@keyframes profileAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.profile-banner {
+    height: 60px;
+    background: var(--accent);
+}
+
+.profile-card-content {
+    padding: 16px;
+    background: var(--bg-secondary);
+    position: relative;
+}
+
+.profile-avatar-wrapper {
+    position: absolute;
+    top: -45px;
+    left: 16px;
+    background: var(--bg-secondary);
+    padding: 6px;
+    border-radius: 50%;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--accent-text);
+}
+
+.profile-info {
+    margin-top: 45px;
+}
+
+.profile-name {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.profile-tag {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.profile-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 12px 0;
+}
+
+.profile-section-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.profile-bio {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}

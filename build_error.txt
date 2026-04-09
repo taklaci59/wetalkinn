@@ -1,0 +1,11 @@
+  Geri y├╝klenecek projeler belirleniyor...
+  Geri y├╝kleme i├ğin t├╝m projeler g├╝ncel.
+E:\wetalkin\DoWeTalk-main\Services\ServerService.cs(7,34): error CS0535: 'ServerService', 'IServerService.CreateChannelAsync(int, string, string, bool)' arabirim ├╝yesini uygulamaz [E:\wetalkin\DoWeTalk-main\DoWeTalk.csproj]
+
+Olu┼şturma BA┼ŞARISIZ OLDU.
+
+E:\wetalkin\DoWeTalk-main\Services\ServerService.cs(7,34): error CS0535: 'ServerService', 'IServerService.CreateChannelAsync(int, string, string, bool)' arabirim ├╝yesini uygulamaz [E:\wetalkin\DoWeTalk-main\DoWeTalk.csproj]
+    0 Uyar─▒
+    1 Hata
+
+Ge├ğen S├╝re 00:00:02.65

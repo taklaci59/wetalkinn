@@ -1,0 +1,57 @@
+/* --- 2025 PRO GLOBAL STYLES --- */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background-color: var(--surface-1);
+    color: var(--text-1);
+    font-family: 'Inter', 'Outfit', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* 1. Universal Focus High-Visibility System */
+:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-color: var(--accent) !important;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.btn:focus, .btn:active:focus, .form-control:focus {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-color: var(--accent) !important;
+}
+
+/* 2. Custom Modern Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--surface-2);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 20px;
+    border: 2px solid var(--surface-2);
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-3);
+}
+
+/* 3. Typography & Placeholders */
+::placeholder {
+    color: var(--text-3) !important;
+    opacity: 0.6;
+    font-style: italic;
+}
+
+.text-2 { color: var(--text-2); }
+.text-3 { color: var(--text-3); }
+.fw-bold { font-weight: 700 !important; }

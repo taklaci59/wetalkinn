@@ -1,0 +1,501 @@
+@model DoWeTalk.Models.ApplicationUser
+
+<style>
+    /* Ayarlar Overlay Genel Yapısı */
+    #settingsOverlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: var(--bg-primary);
+        z-index: 10000;
+        display: none;
+        color: var(--text-primary);
+        font-family: 'Outfit', sans-serif;
+    }
+
+    /* Discord Tarzı Segmentli Visualizer */
+    .mic-segment-container {
+        display: flex;
+        gap: 2px;
+        height: 24px;
+        align-items: center;
+        background: var(--bg-tertiary);
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+
+    .mic-segment {
+        flex: 1;
+        height: 100%;
+        background: var(--border-color); /* Inactive color */
+        border-radius: 2px;
+        transition: background 0.05s ease;
+    }
+
+    .mic-segment.active-green { background: var(--success); }
+    .mic-segment.active-yellow { background: var(--warning); }
+    .mic-segment.active-red { background: var(--danger); }
+
+    /* Sol Menü */
+    .settings-sidebar-nav {
+        width: 280px;
+        background: var(--bg-secondary);
+        padding: 60px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        flex-shrink: 0;
+        border-right: 1px solid var(--border-color);
+    }
+
+    .settings-link {
+        width: 190px;
+        padding: 8px 12px;
+        border-radius: 4px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        margin-bottom: 2px;
+        font-size: 15px;
+        transition: all 0.2s ease;
+    }
+
+    .settings-link:hover { background: var(--hover-bg); color: var(--text-primary); }
+    .settings-link.active { background: var(--active-bg); color: var(--text-primary); font-weight: 600; }
+
+    /* İçerik Alanı */
+    .settings-body {
+        flex-grow: 1;
+        padding: 60px 40px;
+        position: relative;
+        overflow-y: auto;
+        background: var(--bg-primary);
+    }
+
+    .settings-section {
+        max-width: 700px;
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .volume-group {
+        background: var(--bg-tertiary);
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        border: 1px solid var(--border-color);
+    }
+
+    /* Tema Kartları */
+    .theme-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .theme-card {
+        background: var(--bg-tertiary);
+        border: 2px solid transparent;
+        border-radius: 12px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid var(--border-color);
+    }
+
+    .theme-card:hover { transform: translateY(-2px); background: var(--bg-secondary); }
+    .theme-card.active { border-color: var(--accent); background: var(--active-bg); }
+
+    /* Theme Previews Improved */
+    .theme-preview {
+        height: 70px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        width: 100%;
+        border: 1px solid var(--border-subtle);
+        display: flex;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .preview-sidebar { width: 25%; height: 100%; opacity: 0.8; }
+    .preview-content { flex-grow: 1; height: 100%; position: relative; }
+    .preview-accent { 
+        position: absolute; 
+        bottom: 8px; right: 8px; 
+        width: 12px; height: 12px; 
+        border-radius: 50%; 
+        box-shadow: 0 0 10px var(--accent);
+    }
+
+    .theme-card .theme-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-1);
+        text-align: center;
+    }
+
+    /* Accent Color Picker */
+    .accent-picker-container {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 16px;
+        background: var(--surface-3);
+        border-radius: 12px;
+        border: 1px solid var(--border-subtle);
+    }
+
+    .accent-swatch {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid transparent;
+        position: relative;
+    }
+
+    .accent-swatch:hover {
+        transform: translateY(-3px) scale(1.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .accent-swatch.active {
+        border-color: var(--text-1);
+        transform: scale(1.05);
+    }
+
+    .accent-swatch.active::after {
+        content: '\2713';
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 14px;
+        font-weight: 900;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+</style>
+
+<div id="settingsOverlay">
+    <div class="d-flex w-100 h-100">
+        <div class="settings-sidebar-nav">
+            <div style="color: #8e9297; font-size: 11px; font-weight: 800; margin-bottom: 10px; width: 190px; letter-spacing: 0.5px;">KULLANICI AYARLARI</div>
+            <div class="settings-link active" onclick="switchTab('profile', this)">Kullanıcı Profili</div>
+            <div class="settings-link" onclick="switchTab('account', this)">Hesabım</div>
+            <div class="settings-link" onclick="switchTab('appearance', this)">Görünüm</div>
+            <div class="settings-link" onclick="switchTab('voice', this)">Ses ve Görüntü</div>
+            <hr style="width: 190px; border-color: rgba(255,255,255,0.1); margin: 12px 0;">
+            <div class="settings-link text-danger" onclick="location.href='/Account/Logout'">
+                <i class="bi bi-box-arrow-right me-2"></i>Çıkış Yap
+            </div>
+        </div>
+
+        <div class="settings-body" id="settingsBodyContent">
+            <div class="position-absolute" style="right: 40px; top: 40px; cursor: pointer; text-align: center; z-index: 100;" onclick="closeSettings()">
+                <i class="bi bi-x-circle fs-2 text-2"></i>
+                <div class="small fw-bold text-2" style="margin-top: -5px;">ESC</div>
+            </div>
+
+            <div id="section-profile" class="settings-section" style="display: block;">
+                <h3 class="fw-bold mb-4">Kullanıcı Profili</h3>
+                <div class="mb-4">
+                    <label class="small fw-bold text-2 mb-2 text-uppercase" style="letter-spacing: 0.05em;">Kullanıcı Adı</label>
+                    <input type="text" id="usernameInput" class="form-control border-0 p-3" style="background: var(--surface-3); color: var(--text-1); border-radius: 8px;" value="@Model.UserName">
+                </div>
+                <div class="mb-4">
+                    <label class="small fw-bold text-2 mb-2 text-uppercase" style="letter-spacing: 0.05em;">Hakkımda</label>
+                    <textarea id="bioInput" class="form-control border-0 p-3" style="background: var(--surface-3); color: var(--text-1); border-radius: 8px;" rows="4">@Model.Bio</textarea>
+                </div>
+                <button class="btn btn-primary px-4 py-2 fw-bold shadow-sm" onclick="saveProfile()">Değişiklikleri Kaydet</button>
+            </div>
+
+            <div id="section-account" class="settings-section">
+                <h3 class="fw-bold mb-4">Hesabım</h3>
+                <div class="p-4 rounded-4 shadow-sm border border-subtle" style="background: var(--surface-3);">
+                    <label class="small fw-bold text-2 mb-1 text-uppercase" style="letter-spacing: 0.05em;">E-POSTA ADRESİ</label>
+                    <div class="d-flex justify-content-between align-items-center mt-1">
+                        <p class="text-1 mb-0 fs-5">@Model.Email</p>
+                        <button class="btn btn-sm btn-secondary px-3" style="background: var(--surface-4); border: 1px solid var(--border-subtle); color: var(--text-1);">Düzenle</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-appearance" class="settings-section">
+                <h3 class="fw-bold mb-1">Görünüm</h3>
+                <p class="text-2 mb-5">Uygulama genelindeki renk paletini ve görünümü özelleştirin.</p>
+                
+                <div class="mb-5">
+                    <h6 class="text-uppercase small fw-bold text-2 mb-3" style="letter-spacing: 0.12em; font-size: 11px;">VURGU RENGİ (ACCENT COLOR)</h6>
+                    <div class="accent-picker-container">
+                        <div class="accent-swatch" style="background: #7c5cff;" onclick="changeAccent('#7c5cff')" data-color="#7c5cff"></div>
+                        <div class="accent-swatch" style="background: #5865f2;" onclick="changeAccent('#5865f2')" data-color="#5865f2"></div>
+                        <div class="accent-swatch" style="background: #e91e63;" onclick="changeAccent('#e91e63')" data-color="#e91e63"></div>
+                        <div class="accent-swatch" style="background: #00ffcc;" onclick="changeAccent('#00ffcc')" data-color="#00ffcc"></div>
+                        <div class="accent-swatch" style="background: #ff69b4;" onclick="changeAccent('#ff69b4')" data-color="#ff69b4"></div>
+                        <div class="accent-swatch" style="background: #ffab40;" onclick="changeAccent('#ffab40')" data-color="#ffab40"></div>
+                        <div class="accent-swatch" style="background: #fbc02d;" onclick="changeAccent('#fbc02d')" data-color="#fbc02d"></div>
+                        <div class="accent-swatch" style="background: #ffffff; border: 1px solid var(--border-strong);" onclick="changeAccent('#ffffff')" data-color="#ffffff"></div>
+                    </div>
+                </div>
+
+                <div class="theme-category mb-5">
+                    <h6 class="text-uppercase small fw-bold text-2 mb-3" style="letter-spacing: 0.12em; font-size: 11px;">🌸 SOFT / AESTHETIC</h6>
+                    <div class="theme-grid">
+                        <div class="theme-card" onclick="changeTheme('theme-sakura')" data-theme-name="theme-sakura">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #ffb7c5;"></div><div class="preview-content" style="background: #fff0f5;"><div class="preview-accent" style="background: #ff69b4;"></div></div></div>
+                            <div class="theme-name">Sakura</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-frost')" data-theme-name="theme-frost">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #b3d1ff;"></div><div class="preview-content" style="background: #f0f8ff;"><div class="preview-accent" style="background: #3b82f6;"></div></div></div>
+                            <div class="theme-name">Frost</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-lavender')" data-theme-name="theme-lavender">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #ddd6fe;"></div><div class="preview-content" style="background: #f5f3ff;"><div class="preview-accent" style="background: #8b5cf6;"></div></div></div>
+                            <div class="theme-name">Lavender</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-cotton-candy')" data-theme-name="theme-cotton-candy">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #fbcfe8;"></div><div class="preview-content" style="background: #fdf2f8;"><div class="preview-accent" style="background: #f472b6;"></div></div></div>
+                            <div class="theme-name">Cotton Candy</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="theme-category mb-5">
+                    <h6 class="text-uppercase small fw-bold text-2 mb-3" style="letter-spacing: 0.12em; font-size: 11px;">🌑 DARK / MINIMAL</h6>
+                    <div class="theme-grid">
+                        <div class="theme-card" onclick="changeTheme('theme-dark')" data-theme-name="theme-dark">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #0b0c14;"></div><div class="preview-content" style="background: #12131B;"><div class="preview-accent" style="background: #7c5cff;"></div></div></div>
+                            <div class="theme-name">Midnight (Def.)</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-void')" data-theme-name="theme-void">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #000000;"></div><div class="preview-content" style="background: #050505;"><div class="preview-accent" style="background: #ffffff;"></div></div></div>
+                            <div class="theme-name">Void</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-slate')" data-theme-name="theme-slate">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #020617;"></div><div class="preview-content" style="background: #0f172a;"><div class="preview-accent" style="background: #38bdf8;"></div></div></div>
+                            <div class="theme-name">Slate</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-graphite')" data-theme-name="theme-graphite">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #121212;"></div><div class="preview-content" style="background: #1a1a1a;"><div class="preview-accent" style="background: #ffffff;"></div></div></div>
+                            <div class="theme-name">Graphite</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="theme-category mb-5">
+                    <h6 class="text-uppercase small fw-bold text-2 mb-3" style="letter-spacing: 0.12em; font-size: 11px;">🧬 TECH / FUTURE</h6>
+                    <div class="theme-grid">
+                        <div class="theme-card" onclick="changeTheme('theme-cyberpunk')" data-theme-name="theme-cyberpunk">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #050505;"></div><div class="preview-content" style="background: #0a0a0f;"><div class="preview-accent" style="background: #00ffcc;"></div></div></div>
+                            <div class="theme-name">Cyberpunk</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-neon-rider')" data-theme-name="theme-neon-rider">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #1a0524;"></div><div class="preview-content" style="background: #2d0b3a;"><div class="preview-accent" style="background: #ff00ff;"></div></div></div>
+                            <div class="theme-name">Neon Rider</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-synthwave')" data-theme-name="theme-synthwave">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #0e031a;"></div><div class="preview-content" style="background: #1a0633;"><div class="preview-accent" style="background: #05ffa1;"></div></div></div>
+                            <div class="theme-name">Synthwave</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-matrix')" data-theme-name="theme-matrix">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #000d00;"></div><div class="preview-content" style="background: #000000;"><div class="preview-accent" style="background: #00ff41;"></div></div></div>
+                            <div class="theme-name">Matrix</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="theme-category mb-5">
+                    <h6 class="text-uppercase small fw-bold text-2 mb-3" style="letter-spacing: 0.12em; font-size: 11px;">👑 LUXURY / METALLIC</h6>
+                    <div class="theme-grid">
+                        <div class="theme-card" onclick="changeTheme('theme-black-gold')" data-theme-name="theme-black-gold">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #050505;"></div><div class="preview-content" style="background: #0d0d0d;"><div class="preview-accent" style="background: #d4af37;"></div></div></div>
+                            <div class="theme-name">Black Gold</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-royal-crimson')" data-theme-name="theme-royal-crimson">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #1a0404;"></div><div class="preview-content" style="background: #2d0a0a;"><div class="preview-accent" style="background: #ffd700;"></div></div></div>
+                            <div class="theme-name">Royal Crimson</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-midnight-emerald')" data-theme-name="theme-midnight-emerald">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #030d0a;"></div><div class="preview-content" style="background: #061a14;"><div class="preview-accent" style="background: #50c878;"></div></div></div>
+                            <div class="theme-name">Emerald</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="theme-category mb-5">
+                    <h6 class="text-uppercase small fw-bold text-2 mb-3" style="letter-spacing: 0.12em; font-size: 11px;">🎮 GAMER</h6>
+                    <div class="theme-grid">
+                        <div class="theme-card" onclick="changeTheme('theme-fade')" data-theme-name="theme-fade">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #0b0c14;"></div><div class="preview-content" style="background: #12131b;"><div class="preview-accent" style="background: #ffab40;"></div></div></div>
+                            <div class="theme-name">Fade</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-printstream')" data-theme-name="theme-printstream">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #111112;"></div><div class="preview-content" style="background: #1a1a1c;"><div class="preview-accent" style="background: #ffffff;"></div></div></div>
+                            <div class="theme-name">Printstream</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-hyperbeast')" data-theme-name="theme-hyperbeast">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #091212;"></div><div class="preview-content" style="background: #0f1c1c;"><div class="preview-accent" style="background: #ff3366;"></div></div></div>
+                            <div class="theme-name">Hyperbeast</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-asiimov')" data-theme-name="theme-asiimov">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #f2f3f7;"></div><div class="preview-content" style="background: #ffffff;"><div class="preview-accent" style="background: #ff6600;"></div></div></div>
+                            <div class="theme-name">Asiimov</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="theme-category mb-5">
+                    <h6 class="text-uppercase small fw-bold text-2 mb-3" style="letter-spacing: 0.12em; font-size: 11px;">☀️ BRIGHT / VIVID</h6>
+                    <div class="theme-grid">
+                        <div class="theme-card" onclick="changeTheme('theme-banana')" data-theme-name="theme-banana">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #fbc02d;"></div><div class="preview-content" style="background: #fff9c4;"><div class="preview-accent" style="background: #3e2723;"></div></div></div>
+                            <div class="theme-name">Banana</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-juice')" data-theme-name="theme-juice">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #ffa94d;"></div><div class="preview-content" style="background: #fff4e6;"><div class="preview-accent" style="background: #e8590c;"></div></div></div>
+                            <div class="theme-name">Juice</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-solar')" data-theme-name="theme-solar">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #fbbf24;"></div><div class="preview-content" style="background: #fffbeb;"><div class="preview-accent" style="background: #d97706;"></div></div></div>
+                            <div class="theme-name">Solar</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="theme-category mb-5">
+                    <h6 class="text-uppercase small fw-bold text-2 mb-3" style="letter-spacing: 0.12em; font-size: 11px;">🍂 EARTHY / NATURE</h6>
+                    <div class="theme-grid">
+                        <div class="theme-card" onclick="changeTheme('theme-moss')" data-theme-name="theme-moss">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #12130f;"></div><div class="preview-content" style="background: #1a1b16;"><div class="preview-accent" style="background: #a3b18a;"></div></div></div>
+                            <div class="theme-name">Moss</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-autumn')" data-theme-name="theme-autumn">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #140d0c;"></div><div class="preview-content" style="background: #1b1311;"><div class="preview-accent" style="background: #ffb347;"></div></div></div>
+                            <div class="theme-name">Autumn</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-ocean')" data-theme-name="theme-ocean">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #020c1b;"></div><div class="preview-content" style="background: #0a192f;"><div class="preview-accent" style="background: #64ffda;"></div></div></div>
+                            <div class="theme-name">Ocean</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="theme-category mb-5">
+                    <h6 class="text-uppercase small fw-bold text-2 mb-3" style="letter-spacing: 0.12em; font-size: 11px;">🎨 AESTHETIC & PASTEL</h6>
+                    <div class="theme-grid">
+                        <div class="theme-card" onclick="changeTheme('theme-catppuccin-mocha')" data-theme-name="theme-catppuccin-mocha">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #181825;"></div><div class="preview-content" style="background: #1e1e2e;"><div class="preview-accent" style="background: #cba6f7;"></div></div></div>
+                            <div class="theme-name">Catppuccin Mocha</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-catppuccin-latte')" data-theme-name="theme-catppuccin-latte">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #e6e9ef;"></div><div class="preview-content" style="background: #eff1f5;"><div class="preview-accent" style="background: #8839ef;"></div></div></div>
+                            <div class="theme-name">Catppuccin Latte</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-rose-pine')" data-theme-name="theme-rose-pine">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #1f1d2e;"></div><div class="preview-content" style="background: #191724;"><div class="preview-accent" style="background: #c4a7e7;"></div></div></div>
+                            <div class="theme-name">Rosé Pine</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-palenight')" data-theme-name="theme-palenight">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #232635;"></div><div class="preview-content" style="background: #292d3e;"><div class="preview-accent" style="background: #c792ea;"></div></div></div>
+                            <div class="theme-name">Palenight</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-everforest')" data-theme-name="theme-everforest">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #272e33;"></div><div class="preview-content" style="background: #2d353b;"><div class="preview-accent" style="background: #a7c080;"></div></div></div>
+                            <div class="theme-name">Everforest</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="theme-category mb-5">
+                    <h6 class="text-uppercase small fw-bold text-2 mb-3" style="letter-spacing: 0.12em; font-size: 11px;">🏛️ COMMUNITY CLASSICS</h6>
+                    <div class="theme-grid">
+                        <div class="theme-card" onclick="changeTheme('theme-dracula')" data-theme-name="theme-dracula">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #21222c;"></div><div class="preview-content" style="background: #282a36;"><div class="preview-accent" style="background: #ff79c6;"></div></div></div>
+                            <div class="theme-name">Dracula</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-nord')" data-theme-name="theme-nord">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #292e39;"></div><div class="preview-content" style="background: #2e3440;"><div class="preview-accent" style="background: #88c0d0;"></div></div></div>
+                            <div class="theme-name">Nord</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-tokyo-night')" data-theme-name="theme-tokyo-night">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #16161e;"></div><div class="preview-content" style="background: #1a1b26;"><div class="preview-accent" style="background: #7aa2f7;"></div></div></div>
+                            <div class="theme-name">Tokyo Night</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-one-dark')" data-theme-name="theme-one-dark">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #21252b;"></div><div class="preview-content" style="background: #282c34;"><div class="preview-accent" style="background: #61afef;"></div></div></div>
+                            <div class="theme-name">One Dark</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-ayu-dark')" data-theme-name="theme-ayu-dark">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #0d1017;"></div><div class="preview-content" style="background: #0b0e14;"><div class="preview-accent" style="background: #e6b450;"></div></div></div>
+                            <div class="theme-name">Ayu Dark</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="theme-category mb-5">
+                    <h6 class="text-uppercase small fw-bold text-2 mb-3" style="letter-spacing: 0.12em; font-size: 11px;">🕹️ RETRO & VIBRANT</h6>
+                    <div class="theme-grid">
+                        <div class="theme-card" onclick="changeTheme('theme-gruvbox-dark')" data-theme-name="theme-gruvbox-dark">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #1d2021;"></div><div class="preview-content" style="background: #282828;"><div class="preview-accent" style="background: #fabd2f;"></div></div></div>
+                            <div class="theme-name">Gruvbox Dark</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-gruvbox-light')" data-theme-name="theme-gruvbox-light">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #f2e5bc;"></div><div class="preview-content" style="background: #fbf1c7;"><div class="preview-accent" style="background: #d65d0e;"></div></div></div>
+                            <div class="theme-name">Gruvbox Light</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-solarized-dark')" data-theme-name="theme-solarized-dark">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #073642;"></div><div class="preview-content" style="background: #002b36;"><div class="preview-accent" style="background: #2aa198;"></div></div></div>
+                            <div class="theme-name">Solarized Dark</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-monokai-pro')" data-theme-name="theme-monokai-pro">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #221f22;"></div><div class="preview-content" style="background: #2d2a2e;"><div class="preview-accent" style="background: #ffd866;"></div></div></div>
+                            <div class="theme-name">Monokai Pro</div>
+                        </div>
+                        <div class="theme-card" onclick="changeTheme('theme-synthwave84')" data-theme-name="theme-synthwave84">
+                            <div class="theme-preview"><div class="preview-sidebar" style="background: #1e1a2b;"></div><div class="preview-content" style="background: #262335;"><div class="preview-accent" style="background: #ff7edb;"></div></div></div>
+                            <div class="theme-name">SynthWave '84</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-voice" class="settings-section">
+                <h3 class="fw-bold mb-4">Ses ve Görüntü</h3>
+                
+                <div class="volume-group" style="background: var(--surface-3); border-color: var(--border-subtle);">
+                    <label class="small fw-bold text-2 mb-2 text-uppercase" style="letter-spacing: 0.05em;">Giriş Cihazı</label>
+                    <select id="micSelect" class="form-select border-0 p-3 mb-3" style="background: var(--surface-1); color: var(--text-1);"></select>
+                    
+                    <label class="small fw-bold text-2 mb-1 text-uppercase" style="letter-spacing: 0.05em;">GİRİŞ SESİ (%<span id="inputVolLabel">80</span>)</label>
+                    <input type="range" class="form-range vol-slider" data-type="input" min="0" max="100" value="80">
+                </div>
+
+                <div class="volume-group" style="background: var(--surface-3); border-color: var(--border-subtle);">
+                    <label class="small fw-bold text-2 mb-2 text-uppercase" style="letter-spacing: 0.05em;">Çıkış Cihazı</label>
+                    <select id="speakerSelect" class="form-select border-0 p-3 mb-3" style="background: var(--surface-1); color: var(--text-1);"></select>
+                    
+                    <label class="small fw-bold text-2 mb-1 text-uppercase" style="letter-spacing: 0.05em;">ÇIKIŞ SESİ (%<span id="outputVolLabel">100</span>)</label>
+                    <input type="range" class="form-range vol-slider" data-type="output" min="0" max="100" value="100">
+                </div>
+
+                <div class="p-4 rounded-4 mb-4 shadow-sm border border-subtle" style="background: var(--surface-3);">
+                    <label class="small fw-bold text-2 mb-3 d-block text-uppercase" style="letter-spacing: 0.05em;">Mikrofon Testi</label>
+                    <button id="testMicBtn" class="btn btn-primary mb-3 w-100 fw-bold py-2" onclick="testMicrophone()">
+                        <i class="bi bi-mic-fill me-2"></i>Mikrofonu Test Et
+                    </button>
+                    <div id="micSegmentContainer" class="mic-segment-container" style="background: var(--surface-1);">
+                        @for (int i = 0; i < 50; i++)
+                        {
+                            <div class="mic-segment" style="background: var(--surface-ghost);"></div>
+                        }
+                    </div>
+                    <div class="small text-3 mt-3 text-center">Ses sinyallerini burada görebilirsiniz.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

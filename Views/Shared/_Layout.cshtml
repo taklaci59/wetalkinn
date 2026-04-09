@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DoWeTalk - Konuşmanın Ötesine Geç</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/themes.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Pacifico&display=swap" rel="stylesheet">
+    
+    @await RenderSectionAsync("Styles", required: false)
+    
+    <script>
+        // ZERO-FLICKER: Apply theme immediately before rendering
+        (function() {
+            const isAuthenticated = @(User.Identity.IsAuthenticated ? "true" : "false");
+            
+            if (isAuthenticated) {
+                const savedTheme = localStorage.getItem('dwt-theme') || 'theme-dark';
+                const savedAccent = localStorage.getItem('dwt-accent');
+                document.documentElement.classList.add(savedTheme);
+                if (savedAccent) {
+                    document.documentElement.style.setProperty('--accent', savedAccent);
+                    document.documentElement.style.setProperty('--accent-hover', savedAccent);
+                    document.documentElement.style.setProperty('--user-accent', savedAccent);
+                }
+            } else {
+                // Force default public DoWeTalk theme
+                document.documentElement.classList.add('theme-dark');
+                // The default dark theme uses the original DoWeTalk purple accent
+            }
+        })();
+    </script>
+    <!-- Add meta tag so JS modules know the exact auth state at runtime -->
+    <meta name="user-auth-status" content="@(User.Identity.IsAuthenticated.ToString().ToLower())" />
+    <style>
+        :root {
+            /* Legacy support for transition */
+            --glow-text: 0 0 15px var(--accent);
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            background: rgba(11, 12, 20, 0.8) !important;
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.8rem;
+            background: linear-gradient(to right, var(--accent), var(--text-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .nav-link {
+            color: var(--text-secondary) !important;
+            font-weight: 500;
+            transition: 0.3s;
+            margin: 0 5px;
+        }
+
+            .nav-link:hover {
+                color: var(--text-primary) !important;
+                text-shadow: 0 0 10px var(--glow-color);
+            }
+
+        .btn-login-nav {
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 8px 20px;
+            margin-right: 12px;
+            transition: 0.3s;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+            .btn-login-nav:hover {
+                background: var(--hover-bg);
+                border-color: var(--accent);
+                transform: translateY(-1px);
+            }
+
+        .btn-register-nav {
+            background: var(--accent);
+            border: none;
+            color: var(--accent-text) !important;
+            border-radius: 12px;
+            padding: 9px 24px;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(124, 92, 255, 0.3);
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .btn-register-nav:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 6px 20px var(--glow-color);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg sticky-top">
+            <div class="container">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">DoWeTalk</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-compass-fill me-1"></i> Keşfet</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-robot me-1"></i> Botlar</a></li>
+                    </ul>
+                    <div class="d-flex align-items-center">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <span class="me-3 text-white">Selam, @User.Identity.Name!</span>
+                            <a class="btn-login-nav" asp-controller="Account" asp-action="Logout">Çıkış Yap</a>
+                        }
+                        else
+                        {
+                            <a class="btn-login-nav" asp-controller="Account" asp-action="Auth" asp-route-mode="login">Giriş</a>
+                            <a class="btn-register-nav" asp-controller="Account" asp-action="Auth" asp-route-mode="register">Kayıt Ol</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @Html.AntiForgeryToken()
+    <script>
+        // XSS & CSRF Fix: Attach Anti-Forgery Token to all jQuery AJAX POST/PUT requests
+        $.ajaxSetup({
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
