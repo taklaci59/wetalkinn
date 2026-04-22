@@ -248,11 +248,55 @@ function renderChannelItem(ch) {
     const activeClass = isActive ? 'active text-1' : 'text-2 hover-bg-dark-light';
     const activeStyle = isActive ? 'background: rgba(255, 255, 255, 0.1);' : '';
     
+    let voiceOccupantsHtml = '';
+    if (ch.isVoice && ch.occupants && ch.occupants.length > 0) {
+        voiceOccupantsHtml = ch.occupants.map(name => renderSidebarOccupant(null, name)).join('');
+    }
+
     return `
-        <div class="nav-item channel-item d-flex align-items-center mx-2 px-2 py-1 rounded cursor-pointer ${activeClass} mb-1" style="transition: all 0.1s ease; ${activeStyle}" data-id="${ch.id}" onclick="${clickFn}">
-            <i class="${icon} me-2 fs-5 ${isActive ? 'opacity-100' : 'opacity-75'}"></i> 
-            <span class="text-truncate fw-medium" style="font-size: 15px;">${ch.name}</span>
+        <div class="channel-wrapper mb-1">
+            <div class="nav-item channel-item d-flex align-items-center mx-2 px-2 py-1 rounded cursor-pointer ${activeClass}" style="transition: all 0.1s ease; ${activeStyle}" data-id="${ch.id}" onclick="${clickFn}">
+                <i class="${icon} me-2 fs-5 ${isActive ? 'opacity-100' : 'opacity-75'}"></i> 
+                <span class="text-truncate fw-medium" style="font-size: 15px;">${ch.name}</span>
+            </div>
+            ${ch.isVoice ? `<div class="voice-channel-users ms-4 me-2" id="voiceUsers-${ch.id}">${voiceOccupantsHtml}</div>` : ''}
         </div>`;
+}
+
+function renderSidebarOccupant(userId, username) {
+    const initial = username ? username[0].toUpperCase() : '?';
+    return `
+        <div class="voice-user-item d-flex align-items-center py-1 px-2 rounded cursor-pointer" data-username="${username}" ${userId ? `data-userid="${userId}"` : ''}>
+            <div class="voice-user-avatar me-2" style="width:18px; height:18px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:10px; font-weight:bold;">${initial}</div>
+            <span class="text-2 small text-truncate fw-medium">${username}</span>
+        </div>`;
+}
+
+function handleUserJoinedVoiceSidebar(userId, username, channelId) {
+    const container = $(`#voiceUsers-${channelId}`);
+    if (container.length) {
+        // Remove existing row for this user if any (to avoid duplicates)
+        container.find(`[data-username="${username}"]`).remove();
+        container.append(renderSidebarOccupant(userId, username));
+    }
+}
+
+function handleUserLeftVoiceSidebar(userId, channelId) {
+    // 1. Try to find by userId first if available
+    let row;
+    if (userId) {
+        row = $(`.voice-channel-users [data-userid="${userId}"]`);
+    } else {
+        // 2. If no userId (local cleanup), find the local user's row in this channel
+        const myName = window.currentUserName;
+        row = $(`#voiceUsers-${channelId} [data-username="${myName}"]`);
+    }
+
+    if (row && row.length) {
+        row.fadeOut(150, function() { 
+            $(this).remove(); 
+        });
+    }
 }
 
 function toggleCategory(el) {
@@ -615,18 +659,33 @@ function openChannel(id, name) {
     }
 }
 
-function joinVoiceChannel(id, name) {
-    if (id) {
-        // UI feedback for joining channel session
-        currentChannelId = id.toString();
-        $('.channel-item').removeClass('active text-1 ').addClass('text-2');
-        $(`.channel-item[data-id="${id}"]`).addClass('active text-1 ');
-    }
+async function joinVoiceChannel(id, name) {
+    if (!id) return;
     
-    if (typeof startVoiceCall === 'function') {
-        startVoiceCall();
+    console.log("[Sidebar] Voice channel clicked:", id);
+
+    // UI: Stay on current view, just update channel selection
+    currentChannelId = id.toString();
+    
+    // Update Channel Active State in Sidebar
+    $('.channel-item').removeClass('active text-1 ').addClass('text-2');
+    $(`.channel-item[data-id="${id}"]`).addClass('active text-1 ');
+
+    // Update Sidebar Voice Footer
+    $('#voiceSidebarChannelName').text(name);
+    $('.voice-connection-status').html('<i class="bi bi-broadcast text-success me-1"></i> Ses Bağlı');
+    $('#voicePanelSidebar').addClass('active');
+
+    // Call Voice Room Logic
+    if (typeof window.enterVoiceRoom === 'function') {
+        await window.enterVoiceRoom(id.toString(), name);
     } else {
-        alert("Sesli sohbet modülü yüklenemedi.");
+        showToast("Sesli oda modülü yüklenemedi.", "danger");
+    }
+
+    if (typeof connection !== 'undefined' && connection.state === "Connected") {
+        await connection.invoke("JoinServerGroup", id.toString()).catch(e => console.error(e));
+        await connection.invoke("JoinVoiceChannel", id.toString()).catch(e => console.error(e));
     }
 }
 

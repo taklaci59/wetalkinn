@@ -83,5 +83,63 @@ namespace DoWeTalk.Services
             }
             return Task.FromResult<IDictionary<string, bool>>(result);
         }
+        
+        // Voice Channel Occupancy Logic
+        public Task UpdateVoiceChannelPresenceAsync(string userId, int channelId)
+        {
+            lock (_syncLock)
+            {
+                // Remove from any previous channel if exists
+                RemoveVoiceChannelPresenceInternal(userId);
+                
+                // Add to new channel
+                var occupants = _cache.GetOrCreate($"VoiceOccupants_{channelId}", entry =>
+                {
+                    entry.SetSlidingExpiration(TimeSpan.FromHours(6));
+                    return new HashSet<string>();
+                });
+                
+                if (occupants != null)
+                {
+                    occupants.Add(userId);
+                }
+                
+                // Track user's current channel
+                _cache.Set($"UserVoiceChannel_{userId}", channelId, TimeSpan.FromHours(6));
+            }
+            return Task.CompletedTask;
+        }
+
+        public Task RemoveVoiceChannelPresenceAsync(string userId)
+        {
+            lock (_syncLock)
+            {
+                RemoveVoiceChannelPresenceInternal(userId);
+            }
+            return Task.CompletedTask;
+        }
+
+        private void RemoveVoiceChannelPresenceInternal(string userId)
+        {
+            if (_cache.TryGetValue($"UserVoiceChannel_{userId}", out int oldChannelId))
+            {
+                var occupants = _cache.Get<HashSet<string>>($"VoiceOccupants_{oldChannelId}");
+                if (occupants != null)
+                {
+                    occupants.Remove(userId);
+                    if (occupants.Count == 0) _cache.Remove($"VoiceOccupants_{oldChannelId}");
+                }
+                _cache.Remove($"UserVoiceChannel_{userId}");
+            }
+        }
+
+        public Task<List<string>> GetChannelOccupantsAsync(int channelId)
+        {
+            lock (_syncLock)
+            {
+                var occupants = _cache.Get<HashSet<string>>($"VoiceOccupants_{channelId}");
+                return Task.FromResult(occupants != null ? occupants.ToList() : new List<string>());
+            }
+        }
     }
 }

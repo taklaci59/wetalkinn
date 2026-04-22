@@ -1,4 +1,11 @@
-﻿let isCalling = false;
+let isCalling = false;
+window.voiceState = {
+    inVoiceRoom: false,
+    activeVoiceChannelId: null,
+    activeVoiceChannelName: null,
+    localStream: null,
+    screenStream: null
+};
 let isMicMuted = false;
 let isDeafened = false;
 let localStream = null;
@@ -18,16 +25,19 @@ const rtcConfig = {
 async function setupLocalMedia() {
     try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        if (localStream) {
+            localStream.getAudioTracks()[0].enabled = !isMicMuted;
+        }
         return true;
     } catch (err) {
         console.error("Mikrofon izni alınamadı:", err);
-        alert("Mikrofon izni verilmediği için sesli arama yapılamıyor.");
+        showToast("Mikrofon izni verilmediği için sesli arama yapılamıyor.", "danger");
         return false;
     }
 }
 
 // --- PEER CONNECTION (WebRTC) KURULUMU ---
-function createPeerConnection(targetUser) {
+function createPeerConnection(target) {
     peerConnection = new RTCPeerConnection(rtcConfig);
 
     // Kendi sesimizi bağlantıya ekle
@@ -50,14 +60,49 @@ function createPeerConnection(targetUser) {
     // Bağlantı adaylarını (ICE) karşıya bildir
     peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
-            connection.invoke("SendIceCandidate", targetUser, event.candidate);
+            connection.invoke("SendIceCandidate", target, event.candidate);
         }
     };
 
     return peerConnection;
 }
 
-// --- ARAMA BAŞLATMA ---
+// --- SESLİ ODA GİRİŞİ (DISCORD STYLE) ---
+window.enterVoiceRoom = async function (channelId, channelName) {
+    if (!channelId) return;
+
+    // Prevent duplicate joins
+    if (
+        window.voiceState.inVoiceRoom &&
+        window.voiceState.activeVoiceChannelId === channelId.toString()
+    ) {
+        return;
+    }
+
+    try {
+        // Attempt local media but proceed even if failed
+        await setupLocalMedia();
+
+        // Join via SignalR
+        if (typeof connection !== 'undefined') {
+            await connection.invoke("JoinVoiceChannel", channelId.toString()).catch(e => console.error("[SignalR Join Error]", e));
+        }
+
+        // Update global state
+        window.voiceState.inVoiceRoom = true;
+        window.voiceState.activeVoiceChannelId = channelId.toString();
+        window.voiceState.activeVoiceChannelName = channelName || null;
+
+        console.log("[Voice] Joined channel:", window.voiceState);
+
+        startTimer();
+
+    } catch (err) {
+        console.error("[Voice] Failed to join channel:", err);
+    }
+};
+
+// --- ARAMA BAŞLATMA (1-to-1) ---
 async function startVoiceCall() {
     const targetUser = document.getElementById('chatHeaderName').innerText;
     if (targetUser === "Sohbet" || targetUser === "" || isCalling) return;
@@ -70,7 +115,6 @@ async function startVoiceCall() {
     callingSound.currentTime = 0;
     callingSound.play().catch(e => console.error("Ses çalınamadı:", e));
 
-    // WebRTC Offer Oluştur
     const pc = createPeerConnection(targetUser);
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
@@ -81,7 +125,7 @@ async function startVoiceCall() {
 
 // --- SIGNALR DİNLEYİCİLERİ ---
 connection.on("ReceiveCall", function (fromUser) {
-    if (isCalling) return;
+    if (isCalling || window.voiceState.inVoiceRoom) return;
     showCallNotification(fromUser, "Seni arıyor...", true);
     ringtone.currentTime = 0;
     ringtone.play().catch(e => console.error("Zil sesi çalınamadı:", e));
@@ -132,16 +176,23 @@ function acceptCall() {
     connection.invoke("AcceptCallRequest", caller).catch(err => console.error(err));
 }
 
-function endCall() {
-    const target = isCalling ?
-        document.getElementById('sidebarTargetName').innerText :
-        document.getElementById('callName').innerText;
-
-    connection.invoke("DeclineOrEndCall", target).catch(err => console.error(err));
+window.endCall = function() {
+    if (isCalling) {
+        const target = document.getElementById('sidebarTargetName')?.innerText || document.getElementById('callName')?.innerText || '';
+        if (target) {
+            connection.invoke("DeclineOrEndCall", target).catch(err => console.error(err));
+        }
+    }
     resetCallUI();
 }
 
-function resetCallUI() {
+window.resetCallUI = async function() {
+    console.log("[Voice] Resetting call state.");
+
+    if (window.voiceState && window.voiceState.screenStream) {
+        await window.stopScreenShare();
+    }
+
     stopAllSounds();
     if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
@@ -153,13 +204,42 @@ function resetCallUI() {
     }
     const remoteAudio = document.getElementById('remoteAudioPlayer');
     if (remoteAudio) remoteAudio.remove();
+    
+    // 1. Notify Server (MUST happen while inVoiceRoom is still true)
+    if (window.voiceState) {     
+        const cid = window.voiceState.activeVoiceChannelId;
+        if (window.voiceState.inVoiceRoom && cid) {
+            connection.invoke("LeaveVoiceChannel", cid.toString()).catch(e => console.error(e));
+            
+            // Optimistic UI: Remove myself from the sidebar immediately
+            if (typeof handleUserLeftVoiceSidebar === 'function') {
+                handleUserLeftVoiceSidebar(null, cid); 
+            }
+        }
+    }
 
+    // 2. Reset local flags
     isCalling = false;
     stopTimer();
-    document.getElementById('callScreen').classList.remove('active');
+
+    if (window.voiceState) {     
+        window.voiceState.inVoiceRoom = false;
+        window.voiceState.activeVoiceChannelId = null;
+        window.voiceState.activeVoiceChannelName = null;
+    }
+    
+    // 3. UI Resets
+    document.getElementById('callScreen')?.classList.remove('active');
     document.getElementById('voicePanelSidebar')?.classList.remove('active');
     document.getElementById('voiceContainerDm')?.classList.remove('active');
-}
+
+    // Reset footer status
+    const footerStatus = document.querySelector('.voice-connection-status');
+    if (footerStatus) footerStatus.innerHTML = '<i class="bi bi-broadcast text-danger me-1"></i> Ses Bağlantısı Kesildi';
+    document.getElementById('voiceSidebarChannelName').innerText = 'Kanal Seçilmedi';
+
+    console.log("[Voice] State reset completed.");
+};
 
 function showCallNotification(name, status, isIncoming) {
     const screen = document.getElementById('callScreen');
@@ -176,7 +256,8 @@ function setupActiveCallUI(targetUser) {
     const sidebarPanel = document.getElementById('voicePanelSidebar');
     if (sidebarPanel) {
         sidebarPanel.classList.add('active');
-        document.getElementById('sidebarTargetName').innerText = targetUser;
+        document.getElementById('voiceSidebarChannelName').innerText = targetUser;
+        document.querySelector('.voice-connection-status').innerHTML = '<i class="bi bi-broadcast text-success me-1"></i> Ses Bağlı';
     }
 
     const dmPanel = document.getElementById('voiceContainerDm');
@@ -188,18 +269,19 @@ function setupActiveCallUI(targetUser) {
 
     startTimer();
 }
-
 function toggleMic() {
     isMicMuted = !isMicMuted;
     if (localStream) {
         localStream.getAudioTracks()[0].enabled = !isMicMuted;
     }
 
+    // Update Sidebar
     const btnSidebar = document.getElementById('btnMicSidebar');
-    const btnDm = document.getElementById('btnMicDm');
     if (btnSidebar) btnSidebar.classList.toggle('active', isMicMuted);
-    if (btnDm) btnDm.classList.toggle('active', isMicMuted);
 
+    // Update DM Panel (Legacy)
+    const btnDm = document.getElementById('btnMicDm');
+    if (btnDm) btnDm.classList.toggle('active', isMicMuted);
     const myMicBadge = document.getElementById('myMicBadge');
     if (myMicBadge) myMicBadge.style.display = isMicMuted ? 'flex' : 'none';
 
@@ -211,23 +293,108 @@ function toggleDeafen() {
     const remoteAudio = document.getElementById('remoteAudioPlayer');
     if (remoteAudio) remoteAudio.muted = isDeafened;
 
+    // Update Sidebar
     const btnSidebar = document.getElementById('btnDeafenSidebar');
-    const btnDm = document.getElementById('btnDeafenDm');
     if (btnSidebar) btnSidebar.classList.toggle('active', isDeafened);
+
+    // Update DM Panel (Legacy)
+    const btnDm = document.getElementById('btnDeafenDm');
     if (btnDm) btnDm.classList.toggle('active', isDeafened);
 
     if (isDeafened && !isMicMuted) toggleMic();
     sendMediaUpdate();
 }
 
+
+
 function sendMediaUpdate() {
-    const target = document.getElementById('sidebarTargetName').innerText;
-    if (target && target !== "Kullanıcı") {
+    const target = document.getElementById('voiceSidebarChannelName').innerText;
+    if (target && target !== "Kanal Seçilmedi" && !window.voiceState.inVoiceRoom) {
         connection.invoke("ToggleMedia", target, isMicMuted, isDeafened).catch(err => console.error(err));
     }
 }
 
+// --- EKRAN PAYLAŞIMI (SCREEN SHARE) ---
+window.toggleScreenShare = async function () {
+    const { inVoiceRoom, activeVoiceChannelId } = window.voiceState;
+
+    console.log("[ScreenShare] Attempting to toggle", window.voiceState);
+
+    if (!inVoiceRoom || !activeVoiceChannelId) {
+        alert("Önce bir ses kanalına katılmalısın.");
+        console.warn("[ScreenShare] Blocked: Not in a voice channel.");
+        return;
+    }
+
+    try {
+        if (!window.voiceState.screenStream) {
+            const stream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: true
+            });
+
+            window.voiceState.screenStream = stream;
+
+            const videoTrack = stream.getVideoTracks()[0];
+            videoTrack.onended = () => {
+                window.stopScreenShare();
+            };
+
+            // Replace or add track to each RTCPeerConnection if available
+            Object.values(window.peerConnections || {}).forEach(pc => {
+                const sender = pc.getSenders().find(s => s.track && s.track.kind === "video");
+                if (sender) {
+                    sender.replaceTrack(videoTrack);
+                } else {
+                    pc.addTrack(videoTrack, stream);
+                }
+            });
+
+            // Sync visual button state
+            const btnSidebar = document.getElementById('btnScreenShareSidebar');
+            if (btnSidebar) btnSidebar.classList.add('text-success');
+
+            if (typeof connection !== 'undefined') {
+                await connection.invoke(
+                    "StartScreenShare",
+                    activeVoiceChannelId.toString()
+                );
+            }
+
+            console.log("[ScreenShare] Started.");
+        } else {
+            await window.stopScreenShare();
+        }
+    } catch (err) {
+        console.error("[ScreenShare] Error:", err);
+    }
+};
+
+window.stopScreenShare = async function () {
+    const { screenStream, activeVoiceChannelId } = window.voiceState;
+
+    if (!screenStream) return;
+
+    screenStream.getTracks().forEach(track => track.stop());
+    window.voiceState.screenStream = null;
+
+    // Update UI Button
+    const btnSidebar = document.getElementById('btnScreenShareSidebar');
+    if (btnSidebar) btnSidebar.classList.remove('text-success');
+
+    if (typeof connection !== 'undefined' && activeVoiceChannelId) {
+        await connection.invoke(
+            "StopScreenShare",
+            activeVoiceChannelId.toString()
+        );
+    }
+
+    console.log("[ScreenShare] Stopped.");
+};
+
+
 function updateRemoteParticipantUI(mic, deaf) {
+    // For 1-to-1 Calls
     const remoteMicBadge = document.getElementById('remoteMicBadge');
     const remoteDeafBadge = document.getElementById('remoteDeafBadge');
     if (remoteMicBadge) remoteMicBadge.style.display = mic ? 'flex' : 'none';
@@ -237,6 +404,7 @@ function updateRemoteParticipantUI(mic, deaf) {
 function startTimer() {
     callStartTime = Date.now();
     const timerDisplay = document.getElementById('callTimer');
+    if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         const delta = Date.now() - callStartTime;
         const minutes = Math.floor(delta / 60000);
@@ -252,8 +420,8 @@ function stopTimer() {
 }
 
 function stopAllSounds() {
-    ringtone.pause(); ringtone.currentTime = 0;
-    callingSound.pause(); callingSound.currentTime = 0;
+    if (ringtone) { ringtone.pause(); ringtone.currentTime = 0; }
+    if (callingSound) { callingSound.pause(); callingSound.currentTime = 0; }
 }
 
 function startVideoCall() { startVoiceCall(); }

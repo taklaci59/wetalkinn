@@ -16,6 +16,7 @@ namespace DoWeTalk.Controllers
         private readonly IChatService _chatService;
         private readonly DoWeTalk.Services.IAuthorizationService _authService;
         private readonly IMetadataService _metadataService;
+        private readonly IPresenceService _presenceService;
 
         public HomeController(
             UserManager<ApplicationUser> userManager,
@@ -23,7 +24,8 @@ namespace DoWeTalk.Controllers
             IServerService serverService,
             IChatService chatService,
             DoWeTalk.Services.IAuthorizationService authService,
-            IMetadataService metadataService)
+            IMetadataService metadataService,
+            IPresenceService presenceService)
         {
             _userManager = userManager;
             _hubContext = hubContext;
@@ -31,6 +33,7 @@ namespace DoWeTalk.Controllers
             _chatService = chatService;
             _authService = authService;
             _metadataService = metadataService;
+            _presenceService = presenceService;
         }
 
         public IActionResult Index() => View();
@@ -264,7 +267,33 @@ namespace DoWeTalk.Controllers
             if (user == null || !await _authService.HasServerRoleAsync(user.Id, serverId)) return Unauthorized();
 
             var channels = await _serverService.GetChannelsAsync(serverId);
-            return Json(channels);
+            
+            // Augment with occupancy data for voice channels
+            var result = new List<object>();
+            foreach (var ch in channels)
+            {
+                var channelObj = new Dictionary<string, object>();
+                // Extract properties from the anonymous/dynamic object returned by the service
+                foreach (var prop in ch.GetType().GetProperties())
+                {
+                    channelObj[prop.Name] = prop.GetValue(ch, null);
+                }
+
+                if ((bool)channelObj["isVoice"])
+                {
+                    var occupants = await _presenceService.GetChannelOccupantsAsync((int)channelObj["id"]);
+                    var occupantNames = new List<string>();
+                    foreach (var uId in occupants)
+                    {
+                        var u = await _userManager.FindByIdAsync(uId);
+                        if (u != null) occupantNames.Add(u.UserName!);
+                    }
+                    channelObj["occupants"] = occupantNames;
+                }
+                result.Add(channelObj);
+            }
+            
+            return Json(result);
         }
 
         [HttpGet]

@@ -82,6 +82,9 @@ namespace DoWeTalk.Hubs
                     {
                         await Clients.Users(friendIds).UserStatusChanged(user.Id, false);
                     }
+                    
+                    // Clear Voice Presence
+                    await _presenceService.RemoveVoiceChannelPresenceAsync(user.Id);
                 }
             }
             await base.OnDisconnectedAsync(exception);
@@ -167,9 +170,65 @@ namespace DoWeTalk.Hubs
                 await Clients.User(targetUser.Id).ReceiveMediaStatus(senderName, micMuted, deafened);
         }
 
+        public async Task JoinVoiceChannel(string channelId)
+        {
+            var user = await _userManager.GetUserAsync(Context.User);
+            if (user == null) return;
+
+            if (int.TryParse(channelId, out int cId))
+            {
+                var serverId = await _serverService.GetServerIdByChannelIdAsync(cId);
+                if (serverId > 0)
+                {
+                    // Add to SignalR group for voice-specific updates (if needed)
+                    await Groups.AddToGroupAsync(Context.ConnectionId, $"VoiceChannel_{channelId}");
+                    
+                    // Update occupancy tracking
+                    await _presenceService.UpdateVoiceChannelPresenceAsync(user.Id, cId);
+                    
+                    // Broadcast to the whole server so sidebar updates for everyone
+                    await Clients.Group($"ServerGroup_{serverId}").UserJoinedVoice(user.Id, user.UserName!, channelId);
+                }
+            }
+        }
+
+        public async Task LeaveVoiceChannel(string channelId)
+        {
+            var user = await _userManager.GetUserAsync(Context.User);
+            if (user == null) return;
+
+            if (int.TryParse(channelId, out int cId))
+            {
+                var serverId = await _serverService.GetServerIdByChannelIdAsync(cId);
+                if (serverId > 0)
+                {
+                    await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"VoiceChannel_{channelId}");
+                    await _presenceService.RemoveVoiceChannelPresenceAsync(user.Id);
+                    await Clients.Group($"ServerGroup_{serverId}").UserLeftVoice(user.Id, channelId);
+                }
+            }
+        }
         public async Task JoinServerGroup(string channelId)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, channelId);
+        }
+
+        public async Task StartScreenShare(string channelId)
+        {
+            var user = await _userManager.GetUserAsync(Context.User);
+            if (user == null) return;
+            
+            // Broadcast to the voice channel group
+            await Clients.Group($"VoiceChannel_{channelId}").ReceiveScreenShareStart(user.UserName!);
+        }
+
+        public async Task StopScreenShare(string channelId)
+        {
+            var user = await _userManager.GetUserAsync(Context.User);
+            if (user == null) return;
+            
+            // Broadcast to the voice channel group
+            await Clients.Group($"VoiceChannel_{channelId}").ReceiveScreenShareStop(user.UserName!);
         }
 
         public async Task SendFriendRequest(string receiverUsername)

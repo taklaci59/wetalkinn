@@ -65,6 +65,68 @@ connection.on("ReceiveFriendRequest", function (sender) {
     }
 });
 
+// --- SES KANALI KATILIM DİNLEYİCİLERİ ---
+connection.on("UserJoinedVoice", function (userId, username, channelId) {
+    if (typeof handleUserJoinedVoiceSidebar === 'function') {
+        handleUserJoinedVoiceSidebar(userId, username, channelId);
+    }
+    // Strict local sync logic
+    if (username === window.currentUserName) {
+        console.log("[SignalR Sync] UserJoinedVoice (Self):", channelId);
+        if (window.voiceState) {
+            window.voiceState.inVoiceRoom = true;
+            window.voiceState.activeVoiceChannelId = channelId.toString();
+        }
+    }
+});
+
+connection.on("UserLeftVoice", function (userId, channelId) {
+    if (typeof handleUserLeftVoiceSidebar === 'function') {
+        handleUserLeftVoiceSidebar(userId, channelId);
+    }
+});
+
+// User-Requested Explicit Event Handlers
+connection.on("JoinedVoiceChannel", (channelId) => {
+    console.log("[SignalR] JoinedVoiceChannel:", channelId);
+    if (window.voiceState) {
+        window.voiceState.inVoiceRoom = true;
+        window.voiceState.activeVoiceChannelId = channelId.toString();
+    }
+});
+
+connection.on("LeftVoiceChannel", () => {
+    console.log("[SignalR] LeftVoiceChannel");
+    if (typeof window.resetVoiceState === 'function') {
+        window.resetVoiceState();
+    }
+});
+
+// --- EKRAN PAYLAŞIMI DİNLEYİCİLERİ ---
+connection.on("ReceiveScreenShareStart", function (username) {
+    if (username === window.currentUserName) return;
+    
+    // Gelen yayını UI'da göster
+    $('#messageList').addClass('hidden');
+    $('#streamViewContainer').removeClass('hidden').addClass('d-flex');
+    $('#streamerName').text(username);
+    
+    // Note: To actually see the video, the WebRTC peer connection must be established
+    // and the stream assigned to #remoteStreamVideo. Here we just setup the UI takeover.
+});
+
+connection.on("ReceiveScreenShareStop", function (username) {
+    // Yayını UI'dan kaldır
+    $('#streamViewContainer').addClass('hidden').removeClass('d-flex');
+    $('#messageList').removeClass('hidden');
+});
+
+// --- EKRAN İZLEMEYİ BIRAK (UI) ---
+function stopWatchingStream() {
+    $('#streamViewContainer').addClass('hidden').removeClass('d-flex');
+    $('#messageList').removeClass('hidden');
+}
+
 // --- ARKADAŞLARI LİSTELEME ---
 function loadFriendsData() {
     $.get('/Friend/GetFriends', function (friends) {

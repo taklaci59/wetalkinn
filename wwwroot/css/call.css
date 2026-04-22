@@ -6,6 +6,7 @@
     transform: translateX(-50%);
     width: 340px;
     background: var(--bg-secondary);
+    -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
     border: 1px solid var(--border-color);
     border-radius: 16px;
@@ -53,7 +54,6 @@
 
 /* --- 2. SOL ALT AKTİF SES PANELİ (SIDEBAR) --- */
 .voice-panel-sidebar {
-    display: none;
     background: var(--bg-tertiary);
     padding: 10px 12px;
     border-bottom: 1px solid var(--border-color);
@@ -63,10 +63,19 @@
     width: 100%;
     z-index: 99;
     flex-direction: column;
+    transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    visibility: hidden;
+    display: flex; /* Always flex but hidden */
 }
 
 .voice-panel-sidebar.active {
-    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    visibility: visible;
 }
 
 .voice-info-header {
@@ -269,4 +278,147 @@
 @keyframes fadeInDown {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 4. VOICE ROOM VIEW & PARTICIPANT GRID --- */
+.participant-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    align-content: center;
+    justify-content: center;
+    max-width: 1200px;
+}
+
+.voice-card {
+    background: var(--surface-3);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    aspect-ratio: 16/9;
+}
+
+.voice-card:hover {
+    background: var(--hover-bg);
+}
+
+.voice-card.speaking {
+    border-color: var(--status-success);
+    box-shadow: 0 0 20px rgba(46, 204, 113, 0.2);
+}
+
+.voice-card-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--text-on-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-low);
+    transition: transform 0.2s ease;
+}
+
+.voice-card.speaking .voice-card-avatar {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 4px var(--status-success);
+}
+
+.voice-card-name {
+    font-weight: 700;
+    color: var(--text-1);
+    font-size: 1.1rem;
+}
+
+.voice-card-status {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    display: flex;
+    gap: 8px;
+}
+
+.voice-status-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--status-danger);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+/* --- 5. REFINED SIDEBAR VOICE FOOTER --- */
+.voice-panel-sidebar {
+    background: var(--surface-2);
+    border-top: 1px solid var(--border-subtle);
+    padding: 8px 12px;
+}
+
+.voice-sidebar-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.voice-status-info {
+    min-width: 0;
+    flex-grow: 1;
+}
+
+.voice-connection-status {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--status-success);
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.02em;
+}
+
+.voice-footer-actions {
+    display: flex;
+    gap: 2px;
+}
+
+.btn-v-footer {
+    background: transparent;
+    border: none;
+    color: var(--text-2);
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.btn-v-footer:hover {
+    background: var(--hover-bg);
+    color: var(--text-1);
+}
+
+.btn-v-footer.active {
+    color: var(--status-danger);
+}
+
+.btn-v-footer.disconnect {
+    color: var(--text-2);
+}
+
+.btn-v-footer.disconnect:hover {
+    color: var(--status-danger);
 }

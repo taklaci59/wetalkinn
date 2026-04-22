@@ -10,5 +10,10 @@ namespace DoWeTalk.Services
         Task<string[]> GetOnlineUsersAsync();
         Task<bool> IsUserOnlineAsync(string userId);
         Task<IDictionary<string, bool>> GetPresenceAsync(IEnumerable<string> userIds);
+        
+        // Voice Channel Occupancy
+        Task UpdateVoiceChannelPresenceAsync(string userId, int channelId);
+        Task RemoveVoiceChannelPresenceAsync(string userId);
+        Task<List<string>> GetChannelOccupantsAsync(int channelId);
     }
 }
