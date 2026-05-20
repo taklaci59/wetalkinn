@@ -23,6 +23,11 @@ namespace DoWeTalk.Services
         {
             try
             {
+                if (!await IsUrlSafe(url))
+                {
+                    return null;
+                }
+
                 var response = await _httpClient.GetStringAsync(url);
                 var doc = new HtmlDocument();
                 doc.LoadHtml(response);
@@ -55,6 +60,55 @@ namespace DoWeTalk.Services
             var node = doc.DocumentNode.SelectSingleNode($"//meta[@property='{property}']") 
                        ?? doc.DocumentNode.SelectSingleNode($"//meta[@name='{property}']");
             return node?.GetAttributeValue("content", null);
+        }
+
+        private async Task<bool> IsUrlSafe(string url)
+        {
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            {
+                return false;
+            }
+
+            if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+            {
+                return false;
+            }
+
+            try
+            {
+                var host = uri.DnsSafeHost;
+                var addresses = await System.Net.Dns.GetHostAddressesAsync(host);
+
+                foreach (var address in addresses)
+                {
+                    if (System.Net.IPAddress.IsLoopback(address)) return false;
+
+                    // Check for private IP ranges (IPv4)
+                    if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    {
+                        byte[] bytes = address.GetAddressBytes();
+                        // 10.0.0.0/8
+                        if (bytes[0] == 10) return false;
+                        // 172.16.0.0/12
+                        if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) return false;
+                        // 192.168.0.0/16
+                        if (bytes[0] == 192 && bytes[1] == 168) return false;
+                        // 169.254.0.0/16 (Link-local)
+                        if (bytes[0] == 169 && bytes[1] == 254) return false;
+                    }
+                    // Check for private/local IP ranges (IPv6)
+                    else if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                    {
+                        if (address.IsIPv6LinkLocal || address.IsIPv6SiteLocal || address.IsIPv6UniqueLocal) return false;
+                    }
+                }
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
