@@ -28,8 +28,11 @@ namespace DoWeTalk.Tests
             var friendshipRepo = new Repository<Friendship>(context);
             var blockRepo = new Repository<BlockedUser>(context);
             var serverMemberRepo = new Repository<ServerMember>(context);
+            var roleRepo = new Repository<ServerRole>(context);
+            var smrRepo = new Repository<ServerMemberRole>(context);
+            var serverRepo = new Repository<Server>(context);
 
-            var authService = new AuthorizationService(friendshipRepo, blockRepo, serverMemberRepo);
+            var authService = new AuthorizationService(friendshipRepo, blockRepo, serverMemberRepo, roleRepo, smrRepo, serverRepo);
 
             // Act
             var result = await authService.CanSendMessageAsync("userA", "userB");
@@ -50,8 +53,11 @@ namespace DoWeTalk.Tests
             var friendshipRepo = new Repository<Friendship>(context);
             var blockRepo = new Repository<BlockedUser>(context);
             var serverMemberRepo = new Repository<ServerMember>(context);
+            var roleRepo = new Repository<ServerRole>(context);
+            var smrRepo = new Repository<ServerMemberRole>(context);
+            var serverRepo = new Repository<Server>(context);
 
-            var authService = new AuthorizationService(friendshipRepo, blockRepo, serverMemberRepo);
+            var authService = new AuthorizationService(friendshipRepo, blockRepo, serverMemberRepo, roleRepo, smrRepo, serverRepo);
 
             // Act
             var result = await authService.CanSendMessageAsync("userA", "userB");
@@ -71,8 +77,11 @@ namespace DoWeTalk.Tests
             var friendshipRepo = new Repository<Friendship>(context);
             var blockRepo = new Repository<BlockedUser>(context);
             var serverMemberRepo = new Repository<ServerMember>(context);
+            var roleRepo = new Repository<ServerRole>(context);
+            var smrRepo = new Repository<ServerMemberRole>(context);
+            var serverRepo = new Repository<Server>(context);
 
-            var authService = new AuthorizationService(friendshipRepo, blockRepo, serverMemberRepo);
+            var authService = new AuthorizationService(friendshipRepo, blockRepo, serverMemberRepo, roleRepo, smrRepo, serverRepo);
 
             // Act
             var result = await authService.CanSendMessageAsync("userA", "userB");
@@ -95,8 +104,11 @@ namespace DoWeTalk.Tests
             var friendshipRepo = new Repository<Friendship>(context);
             var blockRepo = new Repository<BlockedUser>(context);
             var serverMemberRepo = new Repository<ServerMember>(context);
+            var roleRepo = new Repository<ServerRole>(context);
+            var smrRepo = new Repository<ServerMemberRole>(context);
+            var serverRepo = new Repository<Server>(context);
 
-            var authService = new AuthorizationService(friendshipRepo, blockRepo, serverMemberRepo);
+            var authService = new AuthorizationService(friendshipRepo, blockRepo, serverMemberRepo, roleRepo, smrRepo, serverRepo);
 
             var candidates = new System.Collections.Generic.List<string> { "userB", "userC", "userD" };
 
