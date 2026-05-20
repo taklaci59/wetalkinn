@@ -229,6 +229,15 @@ function loadChannels(serverId) {
         // Ensure active channel state is maintained
         if (window.currentChannelId) {
             $(`.channel-item[data-id="${window.currentChannelId}"]`).addClass('active');
+        } else {
+            // IF NO ACTIVE CHANNEL, OPEN THE FIRST TEXT CHANNEL
+            const firstTextChannel = channels.find(c => !c.isVoice);
+            if (firstTextChannel) {
+                openChannel(firstTextChannel.id, firstTextChannel.name);
+            } else {
+                $('#chatHeaderName').text('Kanal Seçin');
+                $('#messageList').html('<div class="p-5 text-center text-2 mt-5"><h4><i class="bi bi-hash"></i> Kanal Yok</h4><p class="small">Bu sunucuda metin kanalı bulunmuyor.</p></div>');
+            }
         }
     }).catch(err => {
         console.error("loadChannels error:", err);

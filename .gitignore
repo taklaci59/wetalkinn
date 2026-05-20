@@ -361,3 +361,29 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Agent / Swarm / AI Tool files and folders
+.claude/
+.claude-flow/
+.swarm/
+.mcp.json
+claude-flow.config.json
+CLAUDE.md
+
+# Agent-related temporary empty files or local DBs
+Byzantine
+claude
+Development
+Hierarchical
+ruflo
+ruvector.db
+
+# Build logs and temporary script/error files
+build_error.txt
+build_errors.txt
+build_error_v3.txt
+build_error_v4.txt
+build_out.txt
+db_update.txt
+errors.txt
+script.sql
